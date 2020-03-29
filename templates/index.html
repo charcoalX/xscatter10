@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>xray-data-visualization</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="#" />
+</head>
+<body>
+
+<div id="navbar">
+<div id="navbar-title">Visual Analysis of X-Ray Scattering Images</div>
+<div id="navbar-file">
+    <button id="navbar-file-button" class="navbar-buttons">Load Feature Names</button>
+    <input type="file" id="file-input">
+</div>
+<div id="navbar-options">
+    <label for="data-type-option">Data types: </label>
+    <select id="data-type-option" class="navbar-selects">
+        <option>Synthetic</option>
+        <option>Experimental</option>
+        <option>Cifar10</option>
+    </select>
+    <label for="error-method-option">Error methods: </label>
+    <select id="error-method-option" class="navbar-selects">
+        <option>Cosine</option>
+        <option>Euclidean</option>
+        <option>Manhattan</option>
+    </select>
+    <label for="embedding-method-option">Embedding methods: </label>
+    <select id="embedding-method-option" class="navbar-selects">
+        <option>T-SNE</option>
+        <option>PCA</option>
+    </select>
+    <button id="navbar-hide-background" class="navbar-buttons">Hide Background</button>
+    <button id="attribute-study-btn" class="navbar-buttons">Open Attribute Study</button>
+    <!-- <button id="navbar-layerwise-compare" class="navbar-buttons">Layerwise Distribution</button> -->
+</div>
+</div>
+
+<div id="main-container">
+
+<!-- top container -->
+<div id="top-container">
+    <div id="scatterplot-container">
+        <button id="single-select-btn"><i class="fas fa-genderless"></i> Single</button>
+        <button id="multiple-select-btn"><i class="fas fa-expand"></i> Multiple</button>
+
+        <select id="plot-options" class="navbar-selects">
+            <option value="act">Actual Label (ACT)</option>
+            <option value="fea">Feature-2048 (FEA)</option>
+            <option value="prd">Prediction Prob (PRD)</option>
+        </select>
+
+        <button id="default-dot-btn" class="dot-color-btn selected">Default</button>
+        <button id="prediction-dot-btn" class="dot-color-btn">Prediction</button>
+        <button id="flower-dot-btn" class="dot-color-btn">FlowerPlot</button>
+
+        <div id="scatterplot-image"></div>
+        <div id="scatterplot-imageid"></div>
+        
+
+        <!-- act container -->
+        <div id="act-container">
+            <div class="container-title">Actual Label (ACT)</div>
+            <div id="act-content" class="container-content"></div>
+        </div>
+        <!-- fea container -->
+        <div id="fea-container">
+            <div class="container-title">Feature-2048 (FEA)</div>
+            <div id="fea-content" class="container-content"></div>
+        </div>
+        <!-- prd container -->
+        <div id="prd-container">
+            <div class="container-title">Prediction Prob (PRD)</div>
+            <div id="prd-content" class="container-content"></div>
+        </div>
+        <button id="compare-toggle-btn">Compare</button>
+    </div>
+
+    <!-- vis container -->
+    <div id="vis-container">
+        <div id="vis-container-1">
+            <div id="tab-title-1" class="container-title">Selection: 0</div>
+            <div class="tab">
+                <button id="tab-overview-1" class="tab-buttons">Gallery</button>
+                <button id="tab-statistic-1" class="tab-buttons">Statistics</button>
+                <button id="tab-clustering-1" class="tab-buttons">Clustering</button>
+            </div>
+            <!--
+            <button id="lock-1-btn" class="tab-lock-button"><i class="fas fa-lock-open"></i></button>-->
+            <div id="vis1-content" class="container-content">
+            </div>
+        </div>
+        <div id="vis-container-2">
+            <div id="tab-title-2" class="container-title">Selection: 0</div>
+            <div class="tab">
+                <button id="tab-overview-2" class="tab-buttons">Gallery</button>
+                <button id="tab-statistic-2" class="tab-buttons">Statistics</button>
+                <button id="tab-clustering-2" class="tab-buttons">Clustering</button>
+            </div>
+            <!--
+            <button id="lock-2-btn" class="tab-lock-button"><i class="fas fa-lock-open"></i></button>-->
+            <div id="vis2-content" class="container-content">
+            </div>
+        </div>
+
+        <!-- toggle buttons -->
+        <button id="selection-toggle-btn" class="open">Selection</button>
+    </div>
+
+    <div id="filter-container">
+        <!-- attribute container -->
+        <div id="attribute-container">
+            <div class="container-title">Attributes</div>
+            <div id="attribute-content" class="container-content">
+            </div>
+        </div>
+        <div id="attribute-vis-content"></div>
+        <!-- selection container -->
+        <div id="selection-container">
+            <div class="container-title">Drag/Drop Selections</div>
+            <div id="selection-content" class="container-content"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- bottom container -->
+<div id="bottom-container">
+        <button id="imagecontainer-toggle-btn">Detailed Images</button>
+    <div id="image-container">
+        <div class="container-title rotate">Detailed Images</div>
+        <div id="image-content" class="container-content rotate">
+        </div>
+    </div>
+</div>
+
+<!-- attribute study -->
+<div id="attribute-vis-container">
+    <div id="attribute-matrix2-content"></div>
+    <div id="attribute-matrix-content"></div>
+    <select id="attribute-matrix-option" >
+        <option value="MI">Mutual Info</option>
+        <option value="correlation" selected>Correlation</option>
+        <option value="conditional_entropy_truelabel">Conditional Entropy Truelabel</option>
+        <option value="conditional_entropy_prediction">Conditional Entropy Prediction</option>
+    </select>
+    <select id="attribute-matrix2-option">
+        <option value="1" >1</option>
+        <option value="2"selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <div id="attribute-matrix-title">Coexisting Attributes Statistics</div>
+    <div id="attribute-matrix2-title">Pairwise Attributes Information</div>
+</div>
+</div>
+
+<!-- lib -->
+<script src="../static/js/libs/jquery-3.4.1.min.js"></script>
+<script src="../static/js/libs/d3.v4.min.js"></script>
+<script src="../static/js/libs/d3-lasso.min.js"></script>
+<script src="../static/js/libs/fontawesome.js"></script>
+<script src="../static/js/libs/jscolor.js"></script>
+
+<!-- css files -->
+<link rel="stylesheet" href="../static/css/scatterplot.css"/>
+<link rel="stylesheet" href="../static/css/clustering.css"/>
+<link rel="stylesheet" href="../static/css/vis.css"/>
+<link rel="stylesheet" href="../static/css/selection.css"/>
+<link rel="stylesheet" href="../static/css/gallery.css"/>
+<link rel="stylesheet" href="../static/css/style.css"/>
+<link rel="stylesheet" href="../static/css/count.css"/>
+<!--<link rel="stylesheet" href="../static/css/tsne.css"/>-->
+
+<!-- js files -->
+<script src="../static/js/dom/dom.js"></script>
+<script src="../static/js/dom/dom-elements.js"></script>
+<script src="../static/js/dom/dom-events.js"></script>
+<script src="../static/js/dom/dom-utils.js"></script>
+
+<script src="../static/js/query/query.js"></script>
+
+<script src="../static/js/vis/vis.js"></script>
+<script src="../static/js/vis/scatterplot.js"></script>
+<script src="../static/js/vis/clustering.js"></script>
+<script src="../static/js/vis/parallel.js"></script>
+<script src="../static/js/vis/gallery.js"></script>
+<script src="../static/js/vis/images.js"></script>
+<script src="../static/js/vis/interaction.js"></script>
+<script src="../static/js/vis/relations.js"></script>
+<script src="../static/js/vis/matrix.js"></script>
+<script src="../static/js/vis/count.js"></script>
+<!--<script src="../static/js/vis/tsne.js"></script>-->
+
+
+<script src="../static/js/utils/utils.js"></script>
+
+<script src="../static/js/index.js"></script>
+
+<!-- <script src="../resources/data/17tags_meta.txt" type="text/javascript"></script> -->
+
+</body>
+</html>

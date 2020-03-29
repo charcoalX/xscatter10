@@ -1,0 +1,8 @@
+# Ignore python compiler
+*.pyc
+# Mac default file structure
+.DS_STORE
+# Ignore visuals studio code
+.vscode
+# Log file
+*.Log

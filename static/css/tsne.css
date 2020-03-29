@@ -1,0 +1,60 @@
+.tsne-controls {
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 40px;
+  left: 10px;
+  font-size: 12px;
+  background: #ffffff;
+  opacity: 0.8;
+}
+
+.tsne-button {
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 12px;
+  background: #525252;
+  color: #f0f0f0;
+  outline: none;
+  border: none;
+}
+
+.tsneby-selection {
+    outline: none;
+    font-size: 12px;
+    border-radius: 0px;
+}
+
+.tsne-slider {
+    -webkit-appearance: none;
+    width: auto;
+    height: 15px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+  
+.tsne-slider:hover {
+  opacity: 1;
+}
+  
+.tsne-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #525252;
+  cursor: pointer;
+}
+  
+.tsne-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  background: #525252;
+  cursor: pointer;
+}

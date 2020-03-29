@@ -1,0 +1,8 @@
+{
+    "host": "localhost",
+    "port": "5432",
+    "dbname": "tsne",
+    "user": "postgres",
+    "password": "user",
+    "dumper" : " 'C:\\Program Files\\PostgreSQL\\11\bin\\pg_dump' -U %s -Z 9 -f %s -F c %s  "
+}
