@@ -397,4 +397,15 @@ dom.initImageContainer = function() {
             main.visualize();
         }
     });
+
+    $('#clear-images-btn').on('click', function() {
+        main.selectImageIds.forEach(function(id) {
+            d3.selectAll('.inner-circle-' + id).attr('fill', '#fff');
+            d3.selectAll('.inner-text-' + id).style('fill', '#000');
+        });
+        main.selectImageIds = [];
+        d3.selectAll('.scatterdot-selected').remove();
+        d3.selectAll('.scatterdot-hover').remove();
+        dom.contents.images.empty();
+    });
 }
