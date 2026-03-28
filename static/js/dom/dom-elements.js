@@ -1,5 +1,6 @@
 // Dom options
 dom.options = {
+    featureFile: $('#feature-file-select'),
     dataType: $('#data-type-option'),
     errorMethod: $('#error-method-option'), 
     embeddingMethod: $('#embedding-method-option'),
@@ -8,14 +9,8 @@ dom.options = {
     scatterplot: $('#plot-options'),
 }
 
-// Dom inputs
-dom.inputs = {
-    file: $('#file-input')
-}
-
 // Dom buttons
 dom.buttons = {
-    file: $('#navbar-file-button'),
     selectToggle: $('#selection-toggle-btn'),
     compareToggle: $('#compare-toggle-btn'),
     singleSelect: $('#single-select-btn'),

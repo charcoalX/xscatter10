@@ -11,8 +11,9 @@
 <div id="navbar">
 <div id="navbar-title">Visual Analysis of X-Ray Scattering Images</div>
 <div id="navbar-file">
-    <button id="navbar-file-button" class="navbar-buttons">Load Feature Names</button>
-    <input type="file" id="file-input">
+    <label for="feature-file-select">Feature Names: </label>
+    <select id="feature-file-select" class="navbar-selects">
+    </select>
 </div>
 <div id="navbar-options">
     <label for="data-type-option">Data types: </label>
@@ -128,7 +129,7 @@
 
 <!-- bottom container -->
 <div id="bottom-container">
-        <button id="imagecontainer-toggle-btn">Detailed Images</button>
+        <!-- <button id="imagecontainer-toggle-btn">Detailed Images</button> -->
     <div id="image-container">
         <div class="container-title rotate">Detailed Images</div>
         <div id="image-content" class="container-content rotate">
@@ -198,6 +199,7 @@
 
 <script src="../static/js/utils/utils.js"></script>
 
+<script>var featureFiles = {{ feature_files | tojson }};</script>
 <script src="../static/js/index.js"></script>
 
 <!-- <script src="../resources/data/17tags_meta.txt" type="text/javascript"></script> -->

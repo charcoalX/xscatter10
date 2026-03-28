@@ -76,10 +76,12 @@ main.start = function () {
             main.matrix = matrix;
 
             query.getCountInfo().then(function (count) {
-                
+
                 main.count = count;
                 console.log(count)
-                main.visualize();
+                requestAnimationFrame(function () {
+                    main.visualize();
+                });
             });
         });
     });
@@ -143,5 +145,7 @@ main.visualize = function () {
 // Entry point
 window.onload = function () {
     main.init();
+    dom.options.featureFile.val('17tags_meta.txt');
+    dom.loadFeatureFile(main.embedding, '17tags_meta.txt');
     return;
 }

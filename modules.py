@@ -41,8 +41,10 @@ except ImportError:
 # sklearn.metrics
 try:
     from sklearn.metrics import confusion_matrix
-    from sklearn.cluster import KMeans
+    from sklearn.cluster import KMeans, DBSCAN
     from sklearn import metrics
+    from sklearn.metrics import silhouette_samples, silhouette_score
+    from sklearn.metrics import davies_bouldin_score
     from scipy import stats
     # tsne
     from sklearn.manifold import TSNE
@@ -50,7 +52,7 @@ try:
     from sklearn.metrics import average_precision_score
     from sklearn.metrics import precision_recall_curve
     import matplotlib.pyplot as plt
-    from inspect import signature
+    #from inspect import signature
 
 except ImportError:
     raise util_import_error_message(['sklearn','matplotlib','inspect'])

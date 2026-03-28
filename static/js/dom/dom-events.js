@@ -26,53 +26,44 @@ dom.initDataOptions = function (embedding) {
     return;
 }
 
-// // Initialize file input events
-// dom.initFileInput = function (embedding) {
-    
-//     dom.buttons.file.on('click', function () {
-//         dom.inputs.file.click();
-//     });
+// Load a feature file by name and trigger data reload
+dom.loadFeatureFile = function (embedding, filename) {
+    let content = featureFiles[filename];
+    if (!content) return;
 
-//     dom.inputs.file.on('change', function () {
-//         if (this.files && this.files[0]) {
-//             let file = this.files[0];
-//             let fileReader = new FileReader();
+    let attributes = content.split('\n').filter(function (s) {
+        return s.trim() !== '';
+    });
+    embedding.labels = attributes;
 
-//             fileReader.addEventListener('load', function (e) {
-//                 let content = e.target.result;
-//                 let attributes = content.split('\n');
+    if (filename === 'cifar10.txt') {
+        embedding.options['Data type'] = 'cifar10';
+        main.imagePath = 'cifar10_images/';
+        main.imageFileType = '.png';
+        dom.options.dataType.val('Cifar10');
+    } else {
+        embedding.options['Data type'] = 'synthetic';
+        main.imagePath = 'vis_filtered_thumbnails/';
+        main.imageFileType = '.jpg';
+        dom.options.dataType.val('Synthetic');
+    }
 
-//                 embedding.labels = attributes;
-//                 main.start();
-//             });
+    main.start();
+}
 
-//             fileReader.readAsBinaryString(file);
-//         }
-//     });
-// }
+// Initialize file select: populate options and bind change event
+dom.initFileInput = function (embedding) {
+    Object.keys(featureFiles).forEach(function (filename) {
+        dom.options.featureFile.append(
+            $('<option/>', { value: filename, text: filename })
+        );
+    });
 
-// Initialize file input events
-dom.initFileInput = function (embedding) {  
-    dom.buttons.file.on('click', function () {                    
-        embedding.labels = ["BCC",
-            "Beam Off Image",
-            "Circular Beamstop",
-            "Diffuse high-q",
-            "Diffuse low-q",
-            "FCC",
-            "Halo",
-            "High background",
-            "Higher orders",
-            "Linear beamstop",
-            "Many rings",
-            "Polycrystalline",
-            "Ring",
-            "Strong scattering",
-            "Structure factor",
-            "Weak scattering",
-            "Wedge beamstop"]; 
-        console.log("clicked and labels:",embedding.labels)      
-        main.start();               
+    dom.options.featureFile.on('change', function () {
+        let filename = $(this).val();
+        if (filename) {
+            dom.loadFeatureFile(embedding, filename);
+        }
     });
 }
 

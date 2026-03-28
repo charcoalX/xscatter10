@@ -2,7 +2,7 @@
 
 print('Important Hints: ******************************************************')
 print('Please make sure that you have installed the followings: ')
-print('1. PostgreSQL Database. The default port number is 5432.')
+print('1. PostgreSQL Database. The default port number is 5434.')
 print('2. Localhost server')
 print('3. Install python libraries such as Flask, psycopg2')
 print('***********************************************************************')
@@ -43,7 +43,14 @@ except:
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 'data')
+    feature_files = {}
+    for f in os.listdir(data_dir):
+        filepath = os.path.join(data_dir, f)
+        if os.path.isfile(filepath):
+            with open(filepath, 'r', encoding='utf-8') as fh:
+                feature_files[f] = fh.read()
+    return render_template('index.html', feature_files=feature_files)
 
 @app.route('/QueryAll', methods = ['POST'])
 def Route_query_all():
@@ -65,6 +72,13 @@ def Route_get_cluster():
     json = query_clustering(params = obj)
     return jsonify(json)
 
+@app.route('/GetClusterDBSCAN', methods = ['POST'])
+def Route_get_cluster_dbscan():
+    obj = request.json
+    json = query_clustering_DBSCAN(params = obj)
+ 
+    return jsonify(json)
+
 @app.route('/GetMutualInfo', methods = ['POST'])
 def Route_get_metual_info():
     obj = request.json
@@ -83,6 +97,7 @@ def Route_get_tsne():
     obj = request.json
     json = query_get_tsne(params = obj, conn = conn, cursor = cursor)
     return jsonify(json)
+
 
 if __name__ == '__main__':
     print('Running local server at: http://127.0.0.1:8085/')
