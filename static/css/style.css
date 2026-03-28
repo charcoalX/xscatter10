@@ -151,32 +151,47 @@ html, body {
     white-space: nowrap;
 }
 
-#selection-toggle-btn {
+#selection-toggle-btn,
+#compare-toggle-btn {
     position: absolute;
-    top: 30%;
-    right: -48px;
+    right: 0;
     transform: rotate(270deg);
-    transform-origin: left top 0;
+    transform-origin: right bottom 0;
     background: #525252;
     color: #f0f0f0;
     font-size: 12px;
+    border: none;
     outline: none;
     cursor: pointer;
     z-index: 1000;
+    white-space: nowrap;
+}
+
+#group-selection-toggle-btn {
+    position: absolute;
+    left: 0;
+    transform: rotate(270deg);
+    transform-origin: left bottom 0;
+    background: #525252;
+    color: #f0f0f0;
+    font-size: 12px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    z-index: 1000;
+    white-space: nowrap;
+}
+
+#selection-toggle-btn {
+    top: 32px;
+}
+
+#group-selection-toggle-btn {
+    top: 272px;
 }
 
 #compare-toggle-btn {
-    position: absolute;
-    transform: rotate(270deg);
-    top: 30%;
-    right: -48px;
-    transform-origin: left top 0;
-    background: #525252;
-    color: #f0f0f0;
-    font-size: 12px;
-    outline: none;
-    cursor: pointer;
-    z-index: 1000;
+    top: 295px;
 }
 
 #scatterplot-container {
@@ -217,6 +232,7 @@ html, body {
     -webkit-transition: width 0.5s;
     transition: width 0.5s;
     position: relative;
+    overflow: hidden;
 }
 
 #vis-container-1 {

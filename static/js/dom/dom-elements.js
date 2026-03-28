@@ -30,7 +30,8 @@ dom.buttons = {
     attrStudy: $('#attribute-study-btn'),
     hideBackground: $('#navbar-hide-background'),
 
-    imageContainer: $('#imagecontainer-toggle-btn')
+    imageContainer: $('#imagecontainer-toggle-btn'),
+    groupSelectToggle: $('#group-selection-toggle-btn')
 }
 
 // Dom containers

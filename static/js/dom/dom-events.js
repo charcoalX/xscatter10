@@ -74,10 +74,14 @@ dom.initSelectToggleButton = function () {
 
     dom.buttons.selectToggle.on('click', function () {
         dom.buttons.selectToggle.toggleClass('open');
-        // Open and close selection sidebar
+        var visOpen = dom.buttons.groupSelectToggle.hasClass('open');
+        var compareOpen = dom.buttons.compareToggle.hasClass('open');
+
         if (dom.buttons.selectToggle.hasClass('open')) {
             dom.containers.filter.width('15%');
-            if (dom.buttons.compareToggle.hasClass('open')) {
+            if (!visOpen) {
+                dom.containers.scatterplot.width('85%');
+            } else if (compareOpen) {
                 dom.containers.scatterplot.width('45%');
                 dom.containers.vis.width('40%');
             } else {
@@ -86,21 +90,38 @@ dom.initSelectToggleButton = function () {
             }
         } else {
             dom.containers.filter.width('0%');
-
-            if (dom.buttons.compareToggle.hasClass('open')) {
+            if (!visOpen) {
+                dom.containers.scatterplot.width('100%');
+            } else if (compareOpen) {
                 dom.containers.scatterplot.width('60%');
                 dom.containers.vis.width('40%');
             } else {
                 dom.containers.scatterplot.width('40%');
                 dom.containers.vis.width('60%');
             }
-
-            // Hide attribute container
-            // And   active class from attribute study button
             dom.containers.attrViz.width('0%');
             dom.buttons.attrStudy.removeClass('active');
         }
+    });
+}
 
+// Initialize group selection toggle button
+dom.initGroupSelectToggleButton = function () {
+
+    dom.buttons.groupSelectToggle.on('click', function () {
+        dom.buttons.groupSelectToggle.toggleClass('open');
+        var filterOpen = dom.buttons.selectToggle.hasClass('open');
+        var compareOpen = dom.buttons.compareToggle.hasClass('open');
+        var filterWidth = filterOpen ? 15 : 0;
+
+        if (dom.buttons.groupSelectToggle.hasClass('open')) {
+            var visWidth = compareOpen ? 40 : 50;
+            dom.containers.vis.width(visWidth + '%');
+            dom.containers.scatterplot.width((100 - visWidth - filterWidth) + '%');
+        } else {
+            dom.containers.vis.width('0%');
+            dom.containers.scatterplot.width((100 - filterWidth) + '%');
+        }
     });
 }
 

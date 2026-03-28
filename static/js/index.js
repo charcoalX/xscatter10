@@ -31,6 +31,7 @@ main.init = function () {
     dom.initDataOptions(main.embedding);
     dom.initFileInput(main.embedding);
     dom.initSelectToggleButton();
+    dom.initGroupSelectToggleButton();
     dom.initCompareButton();
     dom.initTransitionEvents();
     // Scatterplot dot buttons
