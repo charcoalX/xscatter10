@@ -2,6 +2,8 @@ from utils import util_compute_distance
 from modules import *
 from info import *
 
+dataSize  = 500
+
 def query_all(params, conn, cursor):
     """ Query cifar10 or x-ray data """
 
@@ -13,12 +15,15 @@ def query_all(params, conn, cursor):
 
     # Create new table name
     table_name = data_type + '_' + embedding_method.replace(' ', '')
-
+    print("data_type:",data_type)
+    print("table_name:",table_name)
     # Execute query
     if data_type == 'cifar10':
-        cursor.execute('SELECT * from ' + table_name + '_1000 limit 100')
-    else:
         cursor.execute('SELECT * from ' + table_name + '_1000 limit 300')
+    else:
+        cursor.execute('SELECT * from ' + table_name +  '_'+ str(dataSize)+'   limit 300') 
+        #cursor.execute('SELECT * from ' + table_name + '_1000_goodiui  limit 300')   # _6861 and limit 500  is for vis case3   # In xscatter8 _1000 limit 500
+        #cursor.execute('SELECT * from ' + table_name + '_1000 limit 300')   # _6861 and limit 500  is for vis case3   # In xscatter8 _1000 limit 500
 
     # Generate query result
     query_result = {}
@@ -79,8 +84,66 @@ def query_clustering(params):
     query_result = {}
     cluster = KMeans(n_clusters = cluster_number, random_state=0).fit(vectors)
     query_result['cluster'] = cluster.labels_.tolist()
+
+    ########################################
+   
+    davies_score = davies_bouldin_score(vectors, cluster.labels_)
+    Silh_score = metrics.silhouette_score(vectors, cluster.labels_)
+
+    query_result['Silh_score'] = Silh_score
+    query_result['davies_score'] = davies_score
     
+    # ############################################
     return query_result
+
+
+
+def query_clustering_DBSCAN(params):
+    """ DBSCAN clustering """
+    # Get all parameters
+    eps = float(params['eps'])
+    min_samples = int(params['min_samples'])
+    vectors = params['vectors']
+    # Clustering
+    query_result = {}
+    cluster = DBSCAN(eps, min_samples).fit(vectors)
+    labels = cluster.labels_.tolist()
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+   
+    # print("cluster.labels_:",n_clusters_, " , labels list:",labels)
+
+    if  n_clusters_ >1 :
+        davies_score = davies_bouldin_score(vectors, cluster.labels_)
+        Silh_score = metrics.silhouette_score(vectors, cluster.labels_)
+    else:
+        print("single cluster")
+        davies_score = 100
+        Silh_score = 100
+  
+    query_result['Silh_score'] = Silh_score
+    query_result['davies_score'] = davies_score
+    query_result['num_cluster'] = len(set(labels))
+
+    #### make the outliers to be a cluster at the index 0, this one also work but outliers will be listed at the top 
+    # query_result['cluster'] = [i+1 for i in labels ] if -1 in labels else labels
+
+    #### make the outliers to be a cluster at the last index 
+    if -1 not in labels:
+        query_result['cluster'] = labels
+        query_result['outlier'] = False
+    else:
+        new_labels = []
+        for i in labels:
+            if i == -1:
+                new_labels.append(i+query_result['num_cluster'])
+            else:
+                new_labels.append(i)
+        query_result['cluster'] = new_labels
+        query_result['outlier'] = True
+
+    # ############################################
+    return query_result
+
     
 def query_get_mutual_info(params, conn, cursor):
 
@@ -91,8 +154,13 @@ def query_get_mutual_info(params, conn, cursor):
 
     query_str_truelabel = ''
     query_str_predprob = ''
+    n_classes = 10
 
-    for i in range(1, 18):
+    if data_type == 'cifar10':
+        n_classes = 10
+    else:
+        n_classes = 17
+    for i in range(1, n_classes+1):
         query_str_truelabel += 'truelabel_c' + str(i) + ','
         query_str_predprob += 'predprob_c' + str(i) + ','
 
@@ -100,7 +168,9 @@ def query_get_mutual_info(params, conn, cursor):
     query_str_predprob = query_str_predprob[:-1]
 
     # True label
-    cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_1000 limit 1000")
+    cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name +  "_"+ str(dataSize)+"   limit 1000")  # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
+
+    # cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_1000 limit 1000")  # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
     truelabel_vector = cursor.fetchall()
     truelabel_vector = numpy.array(truelabel_vector)
 
@@ -108,7 +178,9 @@ def query_get_mutual_info(params, conn, cursor):
     reshape_truelabel_vector = truelabel_vector.T
 
     # Predprob
-    cursor.execute("SELECT " + query_str_predprob + " FROM " + table_name + "_1000 limit 1000")
+    cursor.execute("SELECT " + query_str_predprob + " FROM " + table_name +  "_"+ str(dataSize)+"  limit 1000") # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
+
+    # cursor.execute("SELECT " + query_str_predprob + " FROM " + table_name + "_1000 limit 1000") # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
     predprob_vector = cursor.fetchall()
     predprob_vector = numpy.array(predprob_vector)
     predprob_vector = numpy.where(predprob_vector > 0.5, 1, 0)
@@ -128,36 +200,39 @@ def query_get_mutual_info(params, conn, cursor):
         mutual_info['predProb'] = {}
         mutual_info['between'] = {}
 
-        for i in range(17):
+        for i in range(n_classes):
            
             truelabel_attr1 = reshape_truelabel_vector[i]
             predprob_attr1 = reshape_predprob_vector[i]
 
-            for j in range(17):
+            for j in range(n_classes):
                 truelabel_attr2 = reshape_truelabel_vector[j]
                 predprob_attr2 = reshape_predprob_vector[j]
 
                 if method == 'MI':
 
-                    if np.sum(truelabel_attr1) == 0 or  np.sum(truelabel_attr2) == 0:                        
-                        res1 = 10000000
-                    else:
-                        res1 = metrics.adjusted_mutual_info_score(truelabel_attr1, truelabel_attr2)
+                    # if np.sum(truelabel_attr1) == 0 or  np.sum(truelabel_attr2) == 0:                        
+                    #     # res1 = 10000000
+                    #     res1 = metrics.adjusted_mutual_info_score(truelabel_attr1, truelabel_attr2)
+                    # else:
+                    #     res1 = metrics.adjusted_mutual_info_score(truelabel_attr1, truelabel_attr2)
                         
-                    if np.sum(predprob_attr1)  == 0 or np.sum(predprob_attr2) == 0:
-                        res2 = 10000000
-                    else:
-                        res2 = metrics.adjusted_mutual_info_score(predprob_attr1, predprob_attr2)
+                    # if np.sum(predprob_attr1)  == 0 or np.sum(predprob_attr2) == 0:
+                    #     # res2 = 10000000
+                    #     res2 = metrics.adjusted_mutual_info_score(predprob_attr1, predprob_attr2)
+                    # else:
+                    #     res2 = metrics.adjusted_mutual_info_score(predprob_attr1, predprob_attr2)
                         
-                    if np.sum(truelabel_attr1) == 0 or np.sum(predprob_attr2) == 0:
-                        res3 = 10000000
-                    else:
-                        res3 = metrics.adjusted_mutual_info_score(truelabel_attr1, predprob_attr2) 
+                    # if np.sum(truelabel_attr1) == 0 or np.sum(predprob_attr2) == 0:
+                    #     # res3 = 10000000
+                    #     res3 = metrics.adjusted_mutual_info_score(truelabel_attr1, predprob_attr2) 
+                    # else:
+                    #     res3 = metrics.adjusted_mutual_info_score(truelabel_attr1, predprob_attr2) 
   
 
-                    # res1 = metrics.adjusted_mutual_info_score(truelabel_attr1, truelabel_attr2)
-                    # res2 = metrics.adjusted_mutual_info_score(predprob_attr1, predprob_attr2)
-                    # res3 = metrics.adjusted_mutual_info_score(truelabel_attr1, predprob_attr2)
+                    res1 = metrics.adjusted_mutual_info_score(truelabel_attr1, truelabel_attr2)
+                    res2 = metrics.adjusted_mutual_info_score(predprob_attr1, predprob_attr2)
+                    res3 = metrics.adjusted_mutual_info_score(truelabel_attr1, predprob_attr2)
 
                     mutual_info['trueLabel'][str(i) + '-' + str(j)] = res1
                     mutual_info['predProb'][str(i) + '-' + str(j)] = res2
@@ -166,17 +241,17 @@ def query_get_mutual_info(params, conn, cursor):
                 elif method == 'correlation':
                                         
                     if np.sum(truelabel_attr1) == 0 or  np.sum(truelabel_attr2) == 0:                        
-                        res1 = 10000000
+                        res1 = 0 #10000000
                     else:
                         res1 = numpy.corrcoef(truelabel_attr1, truelabel_attr2)[1][0]
                         
                     if np.sum(predprob_attr1)  == 0 or np.sum(predprob_attr2) == 0:
-                        res2 = 10000000
+                        res2 = 0 #10000000
                     else:
                         res2 = numpy.corrcoef(predprob_attr1, predprob_attr2)[1][0]
                         
                     if np.sum(truelabel_attr1) == 0 or np.sum(predprob_attr2) == 0:
-                        res3 = 10000000
+                        res3 = 0 #10000000
                     else:
                         res3 = numpy.corrcoef(truelabel_attr1, predprob_attr2)[1][0] 
   
@@ -185,25 +260,25 @@ def query_get_mutual_info(params, conn, cursor):
                     mutual_info['between'][str(i) + '-' + str(j)] = float(res3)
 
                 elif method == 'conditional_entropy':
-                    if np.sum(truelabel_attr1) == 0 or  np.sum(truelabel_attr2) == 0:                        
-                        res1 = 10000000
-                    else:
-                        res1 = conditional_entropy(truelabel_attr1, truelabel_attr2)
+                    # if np.sum(truelabel_attr1) == 0 or  np.sum(truelabel_attr2) == 0:                        
+                    #     res1 = 0#10000000
+                    # else:
+                    #     res1 = conditional_entropy(truelabel_attr1, truelabel_attr2)
                         
-                    if np.sum(predprob_attr1)  == 0 or np.sum(predprob_attr2) == 0:
-                        res2 = 10000000
-                    else:
-                        res2 = conditional_entropy(predprob_attr1, predprob_attr2)
+                    # if np.sum(predprob_attr1)  == 0 or np.sum(predprob_attr2) == 0:
+                    #     res2 = 0#10000000
+                    # else:
+                    #     res2 = conditional_entropy(predprob_attr1, predprob_attr2)
                         
-                    if np.sum(truelabel_attr1) == 0 or np.sum(predprob_attr2) == 0:
-                        res3 = 10000000
-                    else:
-                        res3 = conditional_entropy(truelabel_attr1, predprob_attr2)
+                    # if np.sum(truelabel_attr1) == 0 or np.sum(predprob_attr2) == 0:
+                    #     res3 = 0#10000000
+                    # else:
+                    #     res3 = conditional_entropy(truelabel_attr1, predprob_attr2)
 
 
-                    # res1 = conditional_entropy(truelabel_attr1, truelabel_attr2)
-                    # res2 = conditional_entropy(predprob_attr1, predprob_attr2)
-                    # res3 = conditional_entropy(truelabel_attr1, predprob_attr2)
+                    res1 = conditional_entropy(truelabel_attr1, truelabel_attr2)
+                    res2 = conditional_entropy(predprob_attr1, predprob_attr2)
+                    res3 = conditional_entropy(truelabel_attr1, predprob_attr2)
                     
                     if math.isnan(res1):
                          mutual_info['trueLabel'][str(i) + '-' + str(j)] = 0
@@ -239,7 +314,7 @@ def query_get_mutual_info(params, conn, cursor):
     precision = dict()
     recall = dict()
     average_precision = dict()
-    n_classes =17
+    # n_classes =17
     for i in range(n_classes):
         truelabel_attr1 = reshape_truelabel_vector[i]
         predprob_vector = reshape_predprob_vector[i]
@@ -247,12 +322,14 @@ def query_get_mutual_info(params, conn, cursor):
         print("attributes i=", i)
         print("truelabel_attr1.shape = ",truelabel_attr1.shape)
 
-
+        #import pdb
+        #pdb.set_trace()
         precision[i], recall[i], _ = precision_recall_curve(truelabel_attr1,predprob_attr1 , pos_label= 1)
-        average_precision[i] = round(average_precision_score(truelabel_attr1,predprob_attr1 )*1000)/1000
+
+        #average_precision[i] = round(average_precision_score(truelabel_attr1,predprob_attr1 )*1000)/1000
 
         print("precision, recall :",precision[i], recall[i] ,_ )
-    print("average_precision:",average_precision)
+    #print("average_precision:",average_precision)
 
     return recommendation
 
@@ -269,8 +346,14 @@ def query_get_count_info(params, conn, cursor):
 
     query_str_truelabel = ''
     query_str_predprob = ''
+    n_classes = 10
 
-    for i in range(1, 18):
+    if data_type == 'cifar10':
+        n_classes = 10
+    else:
+        n_classes = 17
+
+    for i in range(1, n_classes +1):
         query_str_truelabel += 'truelabel_c' + str(i) + ','
         query_str_predprob += 'predprob_c' + str(i) + ','
 
@@ -278,7 +361,7 @@ def query_get_count_info(params, conn, cursor):
     query_str_predprob = query_str_predprob[:-1]
 
     # True label
-    cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_1000 limit 100")
+    cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_"+ str(dataSize)+" limit 300")
     truelabel_vector = cursor.fetchall()
     truelabel_vector = numpy.array(truelabel_vector)
 
@@ -286,7 +369,7 @@ def query_get_count_info(params, conn, cursor):
     reshape_truelabel_vector = truelabel_vector.T
 
     # Predprob
-    cursor.execute("SELECT " + query_str_predprob + " FROM " + table_name + "_1000 limit 100")
+    cursor.execute("SELECT " + query_str_predprob + " FROM " + table_name +  "_"+ str(dataSize)+"  limit 300")
     predprob_vector = cursor.fetchall()
     predprob_vector = numpy.array(predprob_vector)
     predprob_vector = numpy.where(predprob_vector > 0.5, 1, 0)

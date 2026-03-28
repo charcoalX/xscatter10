@@ -4,16 +4,25 @@
     position: absolute;
     top: 2px;
     left: 2px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .cluster-legends {
     width: auto;
     height: auto;
     position: absolute;
-    top: 22%;
+    top: 35%;
     left: 20px;
     font-size: 12px;
+}
+
+.cluster-coefficient {
+  width: 20%;
+  height: auto;
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  font-size: 11px;
 }
 
 .cluster-legends-btn {
