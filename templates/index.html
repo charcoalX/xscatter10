@@ -34,6 +34,7 @@
         <option>PCA</option>
     </select>
     <button id="attribute-study-btn" class="navbar-buttons">Open Attribute Study</button>
+    <button id="model-arch-btn" class="navbar-buttons">Model Architecture</button>
     <!-- <button id="navbar-layerwise-compare" class="navbar-buttons">Layerwise Distribution</button> -->
 </div>
 </div>
@@ -151,6 +152,18 @@
 
 </div>
 
+<!-- model architecture panel -->
+<div id="model-arch-panel">
+    <div id="model-arch-title" class="container-title">
+        Model Architecture (ResNet-50)
+        <button id="model-arch-close-btn" title="Close">&#x2715;</button>
+    </div>
+    <div id="model-arch-content"></div>
+</div>
+
+<!-- arch tooltip (body-level, position:fixed) -->
+<div id="arch-tooltip"></div>
+
 <!-- bottom container -->
 <div id="bottom-container">
         <!-- <button id="imagecontainer-toggle-btn">Detailed Images</button> -->
@@ -221,6 +234,7 @@
 <script src="../static/js/vis/relations.js"></script>
 <script src="../static/js/vis/matrix.js"></script>
 <script src="../static/js/vis/count.js"></script>
+<script src="../static/js/vis/arch.js"></script>
 <!--<script src="../static/js/vis/tsne.js"></script>-->
 
 

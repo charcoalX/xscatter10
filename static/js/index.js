@@ -42,6 +42,8 @@ main.init = function () {
     // dom.initLockEvents();
     // Attribute visualization
     dom.initAttributeVizButton();
+    // Model architecture panel
+    dom.initModelArchButton();
     // Hide scatterplot background
     dom.initBackgroundOpacitySlider();
     // Initialize matrix options

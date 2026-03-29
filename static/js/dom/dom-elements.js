@@ -28,6 +28,7 @@ dom.buttons = {
 
     // attribute study
     attrStudy: $('#attribute-study-btn'),
+    modelArch: $('#model-arch-btn'),
     backgroundSlider: $('#background-opacity-slider'),
 
     imageContainer: $('#imagecontainer-toggle-btn'),

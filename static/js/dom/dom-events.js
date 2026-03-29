@@ -356,6 +356,21 @@ dom.initAttributeVizButton = function () {
     return;
 }
 
+dom.initModelArchButton = function () {
+    var panel = $('#model-arch-panel');
+
+    dom.buttons.modelArch.on('click', function () {
+        panel.toggleClass('open');
+        var isOpen = panel.hasClass('open');
+        dom.buttons.modelArch.html(isOpen ? 'Close Architecture' : 'Model Architecture');
+    });
+
+    $('#model-arch-close-btn').on('click', function () {
+        panel.removeClass('open');
+        dom.buttons.modelArch.html('Model Architecture');
+    });
+}
+
 // Background opacity slider
 dom.initBackgroundOpacitySlider = function () {
     dom.buttons.backgroundSlider.on('input', function () {
