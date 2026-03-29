@@ -147,6 +147,18 @@ main.visualize = function () {
                 plotType = 'act';
                 $('#act-container .container-title').html('Actual Label (ACT)');
                 break;
+            case 'layer1':
+                plotType = 'layer1';
+                $('#act-container .container-title').html('Layer s1');
+                break;
+            case 'layer3':
+                plotType = 'layer3';
+                $('#act-container .container-title').html('Layer s3');
+                break;
+            case 'layer5':
+                plotType = 'layer5';
+                $('#act-container .container-title').html('Layer s5');
+                break;
             case 'fea':
                 plotType = 'fea';
                 $('#act-container .container-title').html('Feature-2048 (FEA)');

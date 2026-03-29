@@ -97,6 +97,7 @@ html, body {
     background: #d9d9d9;
     color: #252525;
     border: 1px solid #f0f0f0;
+    position: relative;
 }
 
 .container-content {
@@ -123,6 +124,7 @@ html, body {
     height: 100%;
 }
 
+#clear-selections-btn,
 #clear-images-btn {
     position: absolute;
     right: 2px;
@@ -139,6 +141,7 @@ html, body {
     outline: none;
 }
 
+#clear-selections-btn:hover,
 #clear-images-btn:hover {
     color: #cc0000;
 }

@@ -65,6 +65,11 @@
     left: 5px;
 }
 
+#navbar-hide-background {
+    top: 125px;
+    left: 5px;
+}
+
 #act-content {
     overflow: hidden;
     width: 100%;

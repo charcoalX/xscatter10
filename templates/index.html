@@ -33,7 +33,6 @@
         <option>T-SNE</option>
         <option>PCA</option>
     </select>
-    <button id="navbar-hide-background" class="navbar-buttons">Hide Background</button>
     <button id="attribute-study-btn" class="navbar-buttons">Open Attribute Study</button>
     <!-- <button id="navbar-layerwise-compare" class="navbar-buttons">Layerwise Distribution</button> -->
 </div>
@@ -49,6 +48,9 @@
 
         <select id="plot-options" class="navbar-selects">
             <option value="act">Actual Label (ACT)</option>
+            <option value="layer1">Layer s1</option>
+            <option value="layer3">Layer s3</option>
+            <option value="layer5">Layer s5</option>
             <option value="fea">Feature-2048 (FEA)</option>
             <option value="prd">Prediction Prob (PRD)</option>
         </select>
@@ -56,6 +58,7 @@
         <button id="default-dot-btn" class="dot-color-btn selected">Default</button>
         <button id="prediction-dot-btn" class="dot-color-btn">Prediction</button>
         <button id="flower-dot-btn" class="dot-color-btn">FlowerPlot</button>
+        <button id="navbar-hide-background" class="dot-color-btn">Hide Background</button>
 
         <div id="scatterplot-image"></div>
         <div id="scatterplot-imageid"></div>
@@ -138,7 +141,7 @@
         <div id="attribute-vis-content"></div>
         <!-- selection container -->
         <div id="selection-container">
-            <div class="container-title">Drag/Drop Selections</div>
+            <div class="container-title">Drag/Drop Selections <button id="clear-selections-btn" title="Clear all">&#x2715;</button></div>
             <div id="selection-content" class="container-content"></div>
         </div>
     </div>

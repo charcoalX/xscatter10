@@ -443,6 +443,14 @@ dom.initImageContainer = function() {
         }
     });
 
+    $('#clear-selections-btn').on('click', function() {
+        vis.selectedDots = [];
+        vis.selectionCount = 0;
+        d3.selectAll('.scatterdot-selected').remove();
+        dom.contents.selection.empty();
+        main.visualize();
+    });
+
     $('#clear-images-btn').on('click', function() {
         main.selectImageIds.forEach(function(id) {
             d3.selectAll('.inner-circle-' + id).attr('fill', '#fff');
