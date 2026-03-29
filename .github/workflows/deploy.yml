@@ -1,0 +1,58 @@
+name: Build and Deploy to GCE
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  REPO: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/xscatter-repo
+  IMAGE: xscatter
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 登录 GCP
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # 3. 配置 Docker 使用 GCP 认证
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # 4. 构建 Docker 镜像，用 git commit SHA 作为版本标签
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }} \
+            -t ${{ env.REPO }}/${{ env.IMAGE }}:latest \
+            .
+
+      # 5. 推送镜像到 Artifact Registry
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.REPO }}/${{ env.IMAGE }}:latest
+
+      # 6. SSH 进入 GCE VM，拉取新镜像并重启应用
+      - name: Deploy to GCE
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USER }}
+          key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/xscatter
+            docker compose pull app
+            docker compose up -d app
+            docker image prune -f
