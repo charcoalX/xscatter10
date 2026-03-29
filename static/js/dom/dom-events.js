@@ -127,58 +127,82 @@ dom.initGroupSelectToggleButton = function () {
 
 // Show fea prd comparison events
 dom.initCompareButton = function () {
-    
-    dom.buttons.compareToggle.on('click', function () {
-        dom.buttons.compareToggle.toggleClass('open');
-        // Open comparison
-        if (dom.buttons.compareToggle.hasClass('open')) {
 
-            // Resize scatterplot and vis depending on filter container
-            if (dom.buttons.selectToggle.hasClass('open')) {
-                dom.containers.scatterplot.width('45%');
-                dom.containers.vis.width('40%');
-            } else {
-                dom.containers.scatterplot.width('60%');
-                dom.containers.vis.width('40%');
-            }
-
-            dom.containers.actplot.width('33.2%');
-            dom.containers.feaplot.width('33.2%');
-            dom.containers.prdplot.width('33.2%');
-
-            // Check attribute viz if opened
-            if (dom.buttons.attrStudy.hasClass('active')) {
-                dom.containers.attrViz.width('40%')
-                vis.initRelations(dom.contents.attrViz, main.embedding);
-                vis.initMatrix(dom.options.matrix.val());
-                vis.initCount(dom.options.count.val());
-            }
-
-        } else {
-
-            if (dom.buttons.selectToggle.hasClass('open')) {
-                dom.containers.scatterplot.width('35%');
-                dom.containers.vis.width('50%');
-            } else {
-                dom.containers.scatterplot.width('40%');
-                dom.containers.vis.width('60%');
-            }
-
-            dom.containers.actplot.width('100%');
-            dom.containers.feaplot.width('0%');
-            dom.containers.prdplot.width('0%');
-
-            // Check attribute viz if opened
-            if (dom.buttons.attrStudy.hasClass('active')) {
-                dom.containers.attrViz.width('40%')
-                vis.initRelations(dom.contents.attrViz, main.embedding);
-                vis.initMatrix(dom.options.matrix.val());
-                vis.initCount(dom.options.count.val());
-            }
-        }
-
+    dom.buttons.compareToggle.on('click', function (e) {
+        e.stopPropagation();
+        $('#compare-menu').toggle();
     });
 
+    $('#compare-option-1layer').on('click', function () {
+        $('#compare-menu').hide();
+        dom.closeCompare();
+    });
+
+    $('#compare-option-3layers').on('click', function () {
+        $('#compare-menu').hide();
+        dom.openCompare('3layers');
+    });
+
+    $('#compare-option-6layers').on('click', function () {
+        $('#compare-menu').hide();
+        dom.openCompare('6layers');
+    });
+
+    $(document).on('click', function () {
+        $('#compare-menu').hide();
+    });
+    $('#compare-menu').on('click', function (e) {
+        e.stopPropagation();
+    });
+}
+
+dom.openCompare = function (mode) {
+    main.compareMode = mode;
+    dom.buttons.compareToggle.addClass('open');
+
+    if (mode === '3layers') {
+        dom.containers.actplot.width('33.2%');
+        dom.containers.layer2plot.width('0%');
+        dom.containers.layer3plot.width('0%');
+        dom.containers.layer4plot.width('0%');
+        dom.containers.feaplot.width('33.2%');
+        dom.containers.prdplot.width('33.2%');
+    } else {
+        dom.containers.actplot.width('16.6%');
+        dom.containers.layer2plot.width('16.6%');
+        dom.containers.layer3plot.width('16.6%');
+        dom.containers.layer4plot.width('16.6%');
+        dom.containers.feaplot.width('16.6%');
+        dom.containers.prdplot.width('16.6%');
+    }
+
+    if (dom.buttons.attrStudy.hasClass('active')) {
+        dom.containers.attrViz.width('40%');
+        vis.initRelations(dom.contents.attrViz, main.embedding);
+        vis.initMatrix(dom.options.matrix.val());
+        vis.initCount(dom.options.count.val());
+    }
+    requestAnimationFrame(function () { main.visualize(); });
+}
+
+dom.closeCompare = function () {
+    main.compareMode = 'none';
+    dom.buttons.compareToggle.removeClass('open');
+
+    dom.containers.actplot.width('100%');
+    dom.containers.layer2plot.width('0%');
+    dom.containers.layer3plot.width('0%');
+    dom.containers.layer4plot.width('0%');
+    dom.containers.feaplot.width('0%');
+    dom.containers.prdplot.width('0%');
+
+    if (dom.buttons.attrStudy.hasClass('active')) {
+        dom.containers.attrViz.width('40%');
+        vis.initRelations(dom.contents.attrViz, main.embedding);
+        vis.initMatrix(dom.options.matrix.val());
+        vis.initCount(dom.options.count.val());
+    }
+    requestAnimationFrame(function () { main.visualize(); });
 }
 
 // Refresh visualization on transition has ended

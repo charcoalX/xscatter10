@@ -5,6 +5,7 @@ main.imageFileType = '.jpg';
 main.selectImageIds = [];
 main.matrix = undefined;
 main.count = undefined;
+main.compareMode = 'none'; // 'none' | '3layers' | '6layers'
 
 // Embedding data
 main.embedding = {
@@ -103,12 +104,40 @@ main.visualize = function () {
     if (dom.buttons.compareToggle.hasClass('open')) {
         dom.options.scatterplot.hide();
 
-        vis.scatterplot(dom.contents.actPlot, type = 'act', scatterplotData);
-        vis.scatterplot(dom.contents.feaPlot, type = 'fea', scatterplotData);
-        vis.scatterplot(dom.contents.prdPlot, type = 'prd', scatterplotData);
+        if (main.compareMode === '6layers') {
+            vis.scatterplot(dom.contents.actPlot, 'act', scatterplotData);
+            vis.scatterplot(dom.contents.layer2Plot, 'layer1', scatterplotData);
+            vis.scatterplot(dom.contents.layer3Plot, 'layer3', scatterplotData);
+            vis.scatterplot(dom.contents.layer4Plot, 'layer5', scatterplotData);
+            vis.scatterplot(dom.contents.feaPlot, 'fea', scatterplotData);
+            vis.scatterplot(dom.contents.prdPlot, 'prd', scatterplotData);
+            $('#act-container .container-title').html('Actual Label (ACT)');
+            $('#layer2-container .container-title').html('s1');
+            $('#layer3-container .container-title').html('s3');
+            $('#layer4-container .container-title').html('s5');
 
-        // Need to set title back to act
-        $('#act-container .container-title').html('Actual Label (ACT)');
+            console.group('=== 6 Layers Mode: Data Structure ===');
+            console.log('Total points:', scatterplotData.length);
+            console.log('Sample dot (all fields):', scatterplotData[0]);
+            console.log('ACT coords (xTrueLabel, yTrueLabel):', { x: scatterplotData[0].xTrueLabel, y: scatterplotData[0].yTrueLabel });
+            console.log('FEA coords (xFeature, yFeature):', { x: scatterplotData[0].xFeature, y: scatterplotData[0].yFeature });
+            console.log('PRD coords (xPredict, yPredict):', { x: scatterplotData[0].xPredict, y: scatterplotData[0].yPredict });
+            console.log('Layer s1-s5 coords:', {
+                s1: { x: scatterplotData[0].xLayer1, y: scatterplotData[0].yLayer1 },
+                s2: { x: scatterplotData[0].xLayer2, y: scatterplotData[0].yLayer2 },
+                s3: { x: scatterplotData[0].xLayer3, y: scatterplotData[0].yLayer3 },
+                s4: { x: scatterplotData[0].xLayer4, y: scatterplotData[0].yLayer4 },
+                s5: { x: scatterplotData[0].xLayer5, y: scatterplotData[0].yLayer5 }
+            });
+            console.log('Raw embedding sample:', main.embedding.filterData[0]);
+            console.groupEnd();
+
+        } else { // '3layers'
+            vis.scatterplot(dom.contents.actPlot, 'act', scatterplotData);
+            vis.scatterplot(dom.contents.feaPlot, 'fea', scatterplotData);
+            vis.scatterplot(dom.contents.prdPlot, 'prd', scatterplotData);
+            $('#act-container .container-title').html('Actual Label (ACT)');
+        }
     } else {
         dom.options.scatterplot.show();
         let plotType = 'act';

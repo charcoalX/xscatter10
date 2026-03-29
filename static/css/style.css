@@ -223,6 +223,47 @@ html, body {
     float: left;
 }
 
+#layer2-container,
+#layer3-container,
+#layer4-container {
+    width: 0%;
+    height: 100%;
+    float: left;
+    overflow: hidden;
+}
+
+#layer2-content,
+#layer3-content,
+#layer4-content {
+    overflow: hidden;
+}
+
+#compare-menu {
+    display: none;
+    position: absolute;
+    right: 18px;
+    top: 280px;
+    background: #525252;
+    z-index: 1001;
+}
+
+#compare-menu button {
+    color: #f0f0f0;
+    background: #525252;
+    border: none;
+    border-bottom: 1px solid #737373;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+    outline: none;
+}
+
+#compare-menu button:hover {
+    background: #737373;
+}
+
 /* visualization container */
 #vis-container {
     width: 50%;

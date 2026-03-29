@@ -45,6 +45,9 @@ dom.containers = {
     scatterPlotImage: $('#scatterplot-image'),
     scatterPlotImageId: $('#scatterplot-imageid'),
     attrViz: $('#attribute-vis-container'),
+    layer2plot: $('#layer2-container'),
+    layer3plot: $('#layer3-container'),
+    layer4plot: $('#layer4-container'),
 
     top: $('#top-container'),
     bottom: $('#bottom-container')
@@ -55,6 +58,9 @@ dom.contents = {
     selection: $('#selection-content'),
     attribute: $('#attribute-content'),
     actPlot: $('#act-content'),
+    layer2Plot: $('#layer2-content'),
+    layer3Plot: $('#layer3-content'),
+    layer4Plot: $('#layer4-content'),
     feaPlot: $('#fea-content'),
     prdPlot: $('#prd-content'),
 

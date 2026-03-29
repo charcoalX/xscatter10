@@ -74,7 +74,8 @@ vis.scatterplot = function (container, type, dots) {
                     //.attr('stroke', '#252525')
                     //.attr('stroke-width', '1px')
                     .attr('fill-opacity', (d,i) => (linearScale(vis.distanceOfErrors[dot.id])));
-
+                    
+                // 2020july
                 group.append('text')
                     .attr('id', 'scatterselectedtext-' + type + '-' + dot.id)
                     .attr('class', 'scatterselectedtext-' + type)
@@ -232,6 +233,18 @@ vis.getTsneCoords = function (dot, type) {
         case 'prd': return {
             x: dot.xPredict,
             y: dot.yPredict
+        }
+        case 'layer1': return {
+            x: dot.xLayer1,
+            y: dot.yLayer1
+        }
+        case 'layer3': return {
+            x: dot.xLayer3,
+            y: dot.yLayer3
+        }
+        case 'layer5': return {
+            x: dot.xLayer5,
+            y: dot.yLayer5
         }
         default:  return undefined;
     }
@@ -457,6 +470,9 @@ vis.updateColor = function (id, color) {
     d3.select('#scatterselectedcircle-act-' + id).attr('fill', color);
     d3.select('#scatterselectedcircle-fea-' + id).attr('fill', color);
     d3.select('#scatterselectedcircle-prd-' + id).attr('fill', color);
+    d3.select('#scatterselectedcircle-layer1-' + id).attr('fill', color);
+    d3.select('#scatterselectedcircle-layer3-' + id).attr('fill', color);
+    d3.select('#scatterselectedcircle-layer5-' + id).attr('fill', color);
     return;
 }
 
@@ -464,4 +480,7 @@ vis.hideScatterplotBackground = function () {
     d3.selectAll('.scattercircle-act').remove();
     d3.selectAll('.scattercircle-fea').remove();
     d3.selectAll('.scattercircle-prd').remove();
+    d3.selectAll('.scattercircle-layer1').remove();
+    d3.selectAll('.scattercircle-layer3').remove();
+    d3.selectAll('.scattercircle-layer5').remove();
 }
