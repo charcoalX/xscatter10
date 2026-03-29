@@ -375,6 +375,12 @@ dom.initMatrixOptions = function () {
         vis.initMatrix(dom.options.matrix.val());
     });
 
+    $('#matrix-cluster-btn').on('click', function () {
+        vis.matrixClustered = !vis.matrixClustered;
+        $(this).toggleClass('selected');
+        vis.initMatrix(dom.options.matrix.val());
+    });
+
     return;
 }
 

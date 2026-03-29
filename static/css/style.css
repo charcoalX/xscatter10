@@ -402,17 +402,39 @@ html, body {
 }
 
 
+#matrix-option-row {
+    position: absolute;
+    top: 41%;
+    left: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 #attribute-matrix-option {
     height: 25px;
     width: auto;
     outline: none;
     font-size: 12px;
     border-radius: 0px;
-    position: absolute;
-    top: 41%;
-    left: 5px;
     color: #252525;
     background: #ffffff;
+}
+
+#matrix-cluster-btn {
+    height: 25px;
+    font-size: 12px;
+    background: #ffffff;
+    color: #252525;
+    border: 1px solid #525252;
+    cursor: pointer;
+    outline: none;
+    white-space: nowrap;
+}
+
+#matrix-cluster-btn.selected {
+    background: #525252;
+    color: #f0f0f0;
 }
 
 #attribute-matrix2-option {

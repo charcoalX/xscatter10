@@ -162,12 +162,15 @@
 <div id="attribute-vis-container">
     <div id="attribute-matrix2-content"></div>
     <div id="attribute-matrix-content"></div>
-    <select id="attribute-matrix-option" >
-        <option value="MI">Mutual Info</option>
-        <option value="correlation" selected>Correlation</option>
-        <option value="conditional_entropy_truelabel">Conditional Entropy Truelabel</option>
-        <option value="conditional_entropy_prediction">Conditional Entropy Prediction</option>
-    </select>
+    <div id="matrix-option-row">
+        <select id="attribute-matrix-option">
+            <option value="MI">Mutual Info</option>
+            <option value="correlation" selected>Correlation</option>
+            <option value="conditional_entropy_truelabel">Cond. Entropy Truelabel</option>
+            <option value="conditional_entropy_prediction">Cond. Entropy Prediction</option>
+        </select>
+        <button id="matrix-cluster-btn">Cluster</button>
+    </div>
     <select id="attribute-matrix2-option">
         <option value="1" >1</option>
         <option value="2"selected>2</option>

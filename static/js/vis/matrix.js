@@ -1,3 +1,45 @@
+vis.matrixClustered = false;
+
+vis.clusterAttributes = function (mutualInfo, N) {
+    var D = [];
+    for (var i = 0; i < N; i++) {
+        D[i] = [];
+        for (var j = 0; j < N; j++) {
+            if (i === j) { D[i][j] = 0; continue; }
+            var val = mutualInfo[i + '-' + j];
+            if (val === undefined) val = mutualInfo[j + '-' + i];
+            D[i][j] = (val === undefined || val >= 1000000) ? 1 : 1 - Math.abs(val);
+        }
+    }
+    var tree = d3.range(N).map(function (i) { return { leaves: [i] }; });
+    var active = d3.range(N);
+    var CD = D.map(function (row) { return row.slice(); });
+    while (active.length > 1) {
+        var minD = Infinity, ai = -1, bi = -1;
+        for (var p = 0; p < active.length - 1; p++) {
+            for (var q = p + 1; q < active.length; q++) {
+                if (CD[active[p]][active[q]] < minD) {
+                    minD = CD[active[p]][active[q]]; ai = p; bi = q;
+                }
+            }
+        }
+        var a = active[ai], b = active[bi];
+        var lA = tree[a].leaves.length, lB = tree[b].leaves.length;
+        var newIdx = tree.length;
+        tree.push({ leaves: tree[a].leaves.concat(tree[b].leaves) });
+        CD.push([]);
+        for (var k = 0; k < active.length; k++) {
+            var c = active[k];
+            if (c === a || c === b) continue;
+            var d = (CD[a][c] * lA + CD[b][c] * lB) / (lA + lB);
+            CD[newIdx][c] = d; CD[c][newIdx] = d;
+        }
+        CD[newIdx][newIdx] = 0;
+        active.splice(bi, 1); active.splice(ai, 1); active.push(newIdx);
+    }
+    return tree[active[0]].leaves;
+};
+
 vis.initMatrix = function (label) {
     let data = vis.processMutualInfo('correlation');  //fix the label first
     // console.log("initMatrx:",label)
@@ -100,12 +142,20 @@ vis.drawMatrix = function (data, labelType, container){
     let width = container.width() ;
     let height = container.height() ;
     let distance = 0;
+    let minOpacityValue = 0.2;
 
     let matrixRows_len = data.maxCol+1;
     let matrixCols_len = matrixRows_len;
     // let rect_width = d3.min([17, ((width - margin.left - margin.right) / matrixRows_len ), ((height - margin.top - margin.bottom ) / matrixRows_len)]);
     let rect_width = d3.min([17, ((width - margin.left - margin.right) / matrixRows_len ), ((height - margin.top - margin.bottom ) / matrixRows_len)]) + 6;
     let rect_height = d3.min([17, ((width - margin.left - margin.right) / matrixRows_len ), ((height - margin.top - margin.bottom ) / matrixRows_len)]);
+
+    // Attribute ordering: clustered or original
+    var order_dm = vis.matrixClustered
+        ? vis.clusterAttributes(data.mutualInfo.trueLabel, matrixRows_len)
+        : d3.range(matrixRows_len);
+    var pos_dm = new Array(matrixRows_len);
+    order_dm.forEach(function (origIdx, visPos) { pos_dm[origIdx] = visPos; });
 
     svg = d3.select('#' + container.attr('id')).append("svg")
             .attr('width',width)
@@ -164,13 +214,14 @@ vis.drawMatrix = function (data, labelType, container){
                 } else {
                     var res = linearScale_true(value);
                 }
-                if (res > 10000000) {
+                if (res > 10000) {
                     transformData.push(res);
-                    return 0;
+                    // return 0;
+                    return minOpacityValue;
                 }
                 transformData.push(res);
                 
-                return res;
+                return d3.max([ minOpacityValue,res]);
             })
             .attr('stroke','black')
             .attr('stroke-width','1px')
@@ -180,8 +231,8 @@ vis.drawMatrix = function (data, labelType, container){
                 let pos_j = rect_pos_value[0].split('-')[1];
 
                 // if (parseInt(pos_i) > parseInt(pos_j) ){
-                    let x = parseInt(pos_i) * ( rect_width  +distance) + margin.left;
-                    let y = parseInt(pos_j) * (rect_height +distance) + margin.top;
+                    let x = pos_dm[parseInt(pos_i)] * ( rect_width  +distance) + margin.left;
+                    let y = pos_dm[parseInt(pos_j)] * (rect_height +distance) + margin.top;
                     transformXY.push(x.toString() + ',' + y.toString());
                     transformIJ.push(pos_i.toString()+'_'+pos_j.toString())
                     return "translate( " + x +"," + y + ")";
@@ -218,7 +269,7 @@ vis.drawMatrix = function (data, labelType, container){
                     return "translate( " + transformXY[i]+ ")";
                 })
                 .text(function(d){
-                    if (d> 100000){return;}
+                    if (d> 100000){return '.00';}   // add.00  2020
                     return setNum(d);
                 })
                 .on("mouseover",mouseoverText)
@@ -236,9 +287,10 @@ vis.drawMatrix = function (data, labelType, container){
 
 
     // set the text of matrix label
+    var orderedLabels_dm = order_dm.map(function (i) { return main.embedding.labels[i]; });
     let mutual_matrixText_top = svg.selectAll('mutual_label_name-text')
             .attr('class','mutual_label')
-            .data(main.embedding.labels.sort())
+            .data(orderedLabels_dm)
             .enter()
         .append('text')
             .attr('id',function(d,i){
@@ -259,7 +311,7 @@ vis.drawMatrix = function (data, labelType, container){
 
     let mutual_matrixText_left = svg.selectAll('mutual_label_name-text')
             .attr('class','mutual_label')
-            .data(main.embedding.labels.sort())
+            .data(orderedLabels_dm)
             .enter()
         .append('text')
             .attr('id',function(d,i){
@@ -350,7 +402,7 @@ vis.drawMatrix = function (data, labelType, container){
             .text(markerText2);
 
     let line_marker_pred2 = svg.append('line')
-            .attr("x1", margin.left / 2 + 125)
+            .attr("x1", margin.left / 2 + 120)
             .attr("y1", margin.top  +  matrixRows_len * rect_height +6)
             .attr("x2", margin.left / 2 + 245)
             .attr("y2", margin.top  +  matrixRows_len * rect_height +6)
@@ -365,6 +417,40 @@ vis.drawMatrix = function (data, labelType, container){
             .attr("y2", 230)
             .attr("stroke", markerColor1)
             .attr("stroke-width", 1);
+
+     //------------ add boundaries ------------
+     let line_boundary1_bt = svg.append('line')
+     .attr("x1", margin.left / 2 + 120)
+     .attr("y1", margin.top  +  matrixRows_len * rect_height)
+     .attr("x2", margin.left  + matrixRows_len * rect_width)
+     .attr("y2", margin.top  +  matrixRows_len * rect_height)
+     .attr("stroke", markerColor1)
+     .attr("stroke-width", 1);
+
+    let line_boundary1_up = svg.append('line')
+        .attr("x1", margin.left / 2 + 120)
+        .attr("y1", margin.top )
+        .attr("x2", margin.left  + matrixRows_len * rect_width)
+        .attr("y2", margin.top  )
+        .attr("stroke",markerColor1)
+        .attr("stroke-width", 1);
+    
+
+    let line_boundary2_lf = svg.append('line')
+        .attr("x1", margin.left / 2 + 120 )
+        .attr("y1", 110)
+        .attr("x2", margin.left / 2 + 120 )
+        .attr("y2", 110  +  matrixRows_len * rect_height)
+        .attr("stroke", markerColor1)
+        .attr("stroke-width", 1);
+
+    let line_boundary2_rt = svg.append('line')
+        .attr("x1", margin.left  + matrixRows_len * rect_width )
+        .attr("y1", 110)
+        .attr("x2", margin.left  + matrixRows_len * rect_width )
+        .attr("y2", 110  +  matrixRows_len * rect_height)
+        .attr("stroke", markerColor1)
+        .attr("stroke-width", 1);
 
 }
 
@@ -401,11 +487,19 @@ vis.drawMatrixMerged = function (data, labelType, container){
     let width = container.width() ;
     let height = container.height() ;
     let distance = 0;
+    let minOpacityValue = 0.1;
 
     let matrixRows_len = data.maxCol+1;
     let matrixCols_len = matrixRows_len;
     let rect_width = d3.min([17, ((width - margin.left - margin.right) / matrixRows_len ), ((height - margin.top - margin.bottom ) / matrixRows_len)]) + 6;
     let rect_height = d3.min([17, ((width - margin.left - margin.right) / matrixRows_len ), ((height - margin.top - margin.bottom ) / matrixRows_len)]);
+
+    // Attribute ordering: clustered or original
+    var order_mm = vis.matrixClustered
+        ? vis.clusterAttributes(data.mutualInfo.trueLabel, matrixRows_len)
+        : d3.range(matrixRows_len);
+    var pos_mm = new Array(matrixRows_len);
+    order_mm.forEach(function (origIdx, visPos) { pos_mm[origIdx] = visPos; });
 
     svg = d3.select('#' + container.attr('id')).append("svg")
             .attr('width',width)
@@ -435,20 +529,20 @@ vis.drawMatrixMerged = function (data, labelType, container){
                 let rect_pos_value = mutualKeyValuesArray[i];
                 let pos_i = rect_pos_value[0].split('-')[0];
                 let pos_j = rect_pos_value[0].split('-')[1];
-                if (parseInt(pos_i) > parseInt(pos_j)) {
+                if (pos_mm[parseInt(pos_i)] > pos_mm[parseInt(pos_j)]) {
                     let value = rect_pos_value[1];
                     let res = linearScale_true(value);
                     if (res > 10000) {
                         transformData.push(res);
-                        return 0;
+                        return minOpacityValue;
                     }
                     transformData.push(res);
 
-                    // judge positve or negativd 
+                    // judge positve or negativd
                     if(res < 0 ){
-                        return Math.abs(res)
+                        return d3.max([minOpacityValue,Math.abs(res)]);
                     }
-                    return res;
+                    return d3.max([minOpacityValue,res]);
                 }
                 return 0;
 
@@ -460,9 +554,9 @@ vis.drawMatrixMerged = function (data, labelType, container){
                 let pos_i = rect_pos_value[0].split('-')[0];
                 let pos_j = rect_pos_value[0].split('-')[1];
 
-                if (parseInt(pos_i) > parseInt(pos_j) ){
-                    let x = parseInt(pos_i) * ( rect_width+distance) + margin.left;
-                    let y = parseInt(pos_j) * ( rect_height  +distance) + margin.top;
+                if (pos_mm[parseInt(pos_i)] > pos_mm[parseInt(pos_j)] ){
+                    let x = pos_mm[parseInt(pos_i)] * ( rect_width+distance) + margin.left;
+                    let y = pos_mm[parseInt(pos_j)] * ( rect_height  +distance) + margin.top;
                     transformXY.push(x.toString() + ',' + y.toString());
                     transformIJ.push(pos_i.toString()+'_'+pos_j.toString())
                     return "translate( " + x +"," + y + ")";
@@ -498,7 +592,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
                     return "translate( " + transformXY[i]+ ")";
                 })
                 .text(function(d){
-                    if (d >10000) {return;}
+                    if (d >10000) {return '.00';}  // add.00 2020
                     return setNum(d);
                 })
                 .style('cursor', 'pointer')
@@ -540,19 +634,19 @@ vis.drawMatrixMerged = function (data, labelType, container){
                 let rect_pos_value = mutualKeyValuesArray[i];
                 let pos_i = rect_pos_value[0].split('-')[0];
                 let pos_j = rect_pos_value[0].split('-')[1];
-                if (parseInt(pos_i) < parseInt(pos_j)) {
+                if (pos_mm[parseInt(pos_i)] < pos_mm[parseInt(pos_j)]) {
                     let value = rect_pos_value[1];
                     let res = linearScale_pred(value);
                     if (res > 10000) {
                         transformData.push(res);
-                        return 0;
+                        return minOpacityValue;
                     }
                     transformData.push(res);
-                    // judge positve or negativd 
+                    // judge positve or negativd
                     if(res < 0 ){
-                        return Math.abs(res)
+                        return d3.max([minOpacityValue,Math.abs(res)])
                     }
-                    return res;
+                    return  d3.max([minOpacityValue,res]);
                 }
                 return 0;
 
@@ -562,9 +656,9 @@ vis.drawMatrixMerged = function (data, labelType, container){
                 let pos_i = rect_pos_value[0].split('-')[0];
                 let pos_j = rect_pos_value[0].split('-')[1];
 
-                if (parseInt(pos_i) < parseInt(pos_j) ){
-                    let x = parseInt(pos_i) * ( rect_width+distance) + margin.left;
-                    let y = parseInt(pos_j) * ( rect_height  +distance) + margin.top;
+                if (pos_mm[parseInt(pos_i)] < pos_mm[parseInt(pos_j)] ){
+                    let x = pos_mm[parseInt(pos_i)] * ( rect_width+distance) + margin.left;
+                    let y = pos_mm[parseInt(pos_j)] * ( rect_height  +distance) + margin.top;
                     transformXY.push(x.toString() + ',' + y.toString());
                     transformIJ.push(pos_i.toString() + '_' + pos_j.toString());
                     return "translate( " + x +"," + y + ")";
@@ -600,7 +694,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
                         return "translate( " + transformXY[i]+ ")";
                     })
                     .text(function(d){
-                        if (d >10000) {return;}
+                        if (d >10000) {return '.00';} // add.00 2020
                         return setNum(d);
                     })
                     .style('cursor', 'pointer')
@@ -634,7 +728,13 @@ vis.drawMatrixMerged = function (data, labelType, container){
             })
              .attr('width', rect_width)
              .attr('height',rect_height)
-             .attr('stroke','black')
+            //  .attr('stroke','black')
+             .attr('stroke', (d,i)=>{
+                 // --- add boundaries ---               
+                //console.log("d",d)
+                return '#f4a582';
+
+             })
              .attr('stroke-width','1px')
              .attr('fill','#f4a582')
              .attr('opacity',function(d,i){
@@ -647,16 +747,18 @@ vis.drawMatrixMerged = function (data, labelType, container){
 
                     if (res > 10000) {
                        transformData.push(res);
-                       return 0;
+                       return minOpacityValue;
                    }
 
                     transformData.push(res);
-                    console.log('res',res)
+                    // console.log('res',res)
                     // judge positve or negativd 
                     if(res < 0 ){
-                        return Math.abs(res)
+                        return  d3.max([minOpacityValue,Math.abs(res)])// Math.abs(res)
+                        // return Math.abs(res);
                     }
-                    return res;
+                    return d3.max([minOpacityValue,res]);  //res;
+                    // return res;
                  }
                  return 0;
 
@@ -668,8 +770,8 @@ vis.drawMatrixMerged = function (data, labelType, container){
                  let pos_j = rect_pos_value[0].split('-')[1];
 
                  if (parseInt(pos_i) == parseInt(pos_j) ){
-                     let x = parseInt(pos_i) * ( rect_width+distance) + margin.left;
-                     let y = parseInt(pos_j) * (rect_height  +distance) + margin.top;
+                     let x = pos_mm[parseInt(pos_i)] * ( rect_width+distance) + margin.left;
+                     let y = pos_mm[parseInt(pos_j)] * (rect_height  +distance) + margin.top;
                      transformXY.push(x.toString() + ',' + y.toString());
                      transformIJ.push(pos_i.toString() + '_' + pos_j.toString());
                      return "translate( " + x +"," + y + ")";
@@ -705,7 +807,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
                 return "translate( " + transformXY[i]+ ")";
             })
             .text(function(d){
-                if (d >10000){return;}
+                if (d >10000 ) {return '.00';}  //add.00 2020
                 return setNum(d);
             })
             .on('click', function(d) {
@@ -722,9 +824,10 @@ vis.drawMatrixMerged = function (data, labelType, container){
 
 
     // set the text of matrix label
+    var orderedLabels_mm = order_mm.map(function (i) { return main.embedding.labels[i]; });
     let mutual_matrixText_top = svg.selectAll('mutual_label_name-text')
             .attr('class','mutual_label')
-            .data(main.embedding.labels.sort())
+            .data(orderedLabels_mm)
             .enter()
         .append('text')
             .attr('id',function(d,i){
@@ -745,7 +848,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
 
     let mutual_matrixText_left = svg.selectAll('mutual_label_name-text')
             .attr('class','mutual_label')
-            .data(main.embedding.labels.sort())
+            .data(orderedLabels_mm)
             .enter()
         .append('text')
             .attr('id',function(d,i){
@@ -816,7 +919,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
             .style("font-weight","bold")
             .attr('fill','#92c5de')
             .attr('transform',function(d,i){
-                let x = margin.left / 2 + 125;
+                let x = margin.left / 2 + 120;
                 let y = margin.top  +  matrixRows_len * rect_height + 15;
                 return "translate( " + x +"," + y + ") rotate(0)";
             })
@@ -836,7 +939,7 @@ vis.drawMatrixMerged = function (data, labelType, container){
             .text('true-label ');
 
     let line_marker_pred2 = svg.append('line')
-            .attr("x1", margin.left / 2 + 125)
+            .attr("x1", margin.left / 2 + 120)
             .attr("y1", margin.top  +  matrixRows_len * rect_height +6)
             .attr("x2", margin.left / 2 + 245)
             .attr("y2", margin.top  +  matrixRows_len * rect_height +6)
@@ -849,6 +952,40 @@ vis.drawMatrixMerged = function (data, labelType, container){
             .attr("y1", 110)
             .attr("x2", margin.left  + matrixRows_len * rect_width + 6)
             .attr("y2", 230)
+            .attr("stroke", '#a6d96a')
+            .attr("stroke-width", 1);
+    
+    //------------ add boundaries ------------
+    let line_boundary1_bt = svg.append('line')
+            .attr("x1", margin.left / 2 + 120)
+            .attr("y1", margin.top  +  matrixRows_len * rect_height)
+            .attr("x2", margin.left  + matrixRows_len * rect_width)
+            .attr("y2", margin.top  +  matrixRows_len * rect_height)
+            .attr("stroke", '#92c5de')
+            .attr("stroke-width", 1);
+
+    let line_boundary1_up = svg.append('line')
+            .attr("x1", margin.left / 2 + 120)
+            .attr("y1", margin.top )
+            .attr("x2", margin.left  + matrixRows_len * rect_width)
+            .attr("y2", margin.top  )
+            .attr("stroke", '#a6d96a')
+            .attr("stroke-width", 1);
+          
+    
+    let line_boundary2_lf = svg.append('line')
+            .attr("x1", margin.left / 2 + 120 )
+            .attr("y1", 110)
+            .attr("x2", margin.left / 2 + 120 )
+            .attr("y2", 110  +  matrixRows_len * rect_height)
+            .attr("stroke", '#92c5de')
+            .attr("stroke-width", 1);
+
+    let line_boundary2_rt = svg.append('line')
+            .attr("x1", margin.left  + matrixRows_len * rect_width )
+            .attr("y1", 110)
+            .attr("x2", margin.left  + matrixRows_len * rect_width )
+            .attr("y2", 110  +  matrixRows_len * rect_height)
             .attr("stroke", '#a6d96a')
             .attr("stroke-width", 1);
 
