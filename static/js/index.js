@@ -114,9 +114,9 @@ main.visualize = function () {
             vis.scatterplot(dom.contents.feaPlot, 'fea', scatterplotData);
             vis.scatterplot(dom.contents.prdPlot, 'prd', scatterplotData);
             $('#act-container .container-title').html('Actual Label (ACT)');
-            $('#layer2-container .container-title').html('s1');
-            $('#layer3-container .container-title').html('s3');
-            $('#layer4-container .container-title').html('s5');
+            $('#layer2-container .container-title').html('SCALE1');
+            $('#layer3-container .container-title').html('SCALE3');
+            $('#layer4-container .container-title').html('SCALE5');
 
             console.group('=== 6 Layers Mode: Data Structure ===');
             console.log('Total points:', scatterplotData.length);
@@ -151,15 +151,15 @@ main.visualize = function () {
                 break;
             case 'layer1':
                 plotType = 'layer1';
-                $('#act-container .container-title').html('Layer s1');
+                $('#act-container .container-title').html('SCALE1');
                 break;
             case 'layer3':
                 plotType = 'layer3';
-                $('#act-container .container-title').html('Layer s3');
+                $('#act-container .container-title').html('SCALE3');
                 break;
             case 'layer5':
                 plotType = 'layer5';
-                $('#act-container .container-title').html('Layer s5');
+                $('#act-container .container-title').html('SCALE5');
                 break;
             case 'fea':
                 plotType = 'fea';
