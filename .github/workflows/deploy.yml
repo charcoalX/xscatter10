@@ -33,7 +33,7 @@ jobs:
       # 4. 构建 Docker 镜像，用 git commit SHA 作为版本标签
       - name: Build Docker image
         run: |
-          docker build \
+          docker build --no-cache \
             -t ${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }} \
             -t ${{ env.REPO }}/${{ env.IMAGE }}:latest \
             .
