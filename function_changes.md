@@ -154,6 +154,20 @@ Both buttons share CSS styling: transparent background, `#525252` color, turns r
 
 ---
 
+## 12. Background Opacity Slider
+
+**Baseline:** A **Hide Background** button toggled background scatter circles on or off by removing all `.scattercircle-*` elements from the DOM (and calling `main.visualize()` to restore them).
+
+**Current:**
+- The button is replaced by a **range slider** (`<input type="range" min="0" max="1" step="0.05">`) with a "Background" label, positioned in the same location (top-left of the scatterplot panel).
+- Dragging the slider calls `vis.setBackgroundOpacity(opacity)`, which sets the SVG `opacity` attribute on all six `.scattercircle-*` classes simultaneously in real time — no DOM removal or full re-render required.
+- The opacity value is stored in `vis.backgroundOpacity` and applied to newly rendered circles so the setting persists across re-renders (e.g. after changing embedding method or data type).
+- Uses the `opacity` SVG attribute (not `fill-opacity`) so it composes independently with the existing error-distance `fill-opacity` encoding.
+
+**Files changed:** `templates/index.html`, `static/css/scatterplot.css`, `static/js/dom/dom-elements.js`, `static/js/dom/dom-events.js`, `static/js/index.js`, `static/js/vis/scatterplot.js`
+
+---
+
 ## Summary Table
 
 | # | Feature | Baseline | Current |
@@ -169,3 +183,4 @@ Both buttons share CSS styling: transparent background, `#525252` color, turns r
 | 9 | Matrix row/col order | Fixed | Optional hierarchical clustering |
 | 10 | Matrix controls layout | Absolute-positioned dropdown | Flex row with auto-width |
 | 11 | DB port / table size | 5432, `_1000_goodiui` | 5434, `_500` |
+| 12 | Background visibility | Binary hide/show button | Continuous opacity slider (0–1) |

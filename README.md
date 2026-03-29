@@ -63,7 +63,7 @@ The main interactive canvas. Every data point is one circle.
 | **Default** | Colors dots by true label. |
 | **Prediction** | Colors dots by predicted label probability. |
 | **FlowerPlot** | Renders multi-petal glyphs representing per-attribute prediction probabilities. |
-| **Hide Background / Show Background** | Removes or restores all unselected dots so only the selected subset is visible. |
+| **Background** slider | Continuously adjusts the opacity of all unselected (background) dots from fully visible (1) to fully hidden (0). |
 
 ### Plot Type Dropdown
 
