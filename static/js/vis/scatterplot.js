@@ -487,7 +487,10 @@ vis.setBackgroundOpacity = function (opacity) {
 }
 
 vis.repositionLabels = function (type) {
-    var labels = [];
+    // Reset any previous repositioning so getBBox reflects natural position
+    d3.selectAll('.scatterselectedtext-' + type).attr('transform', null);
+
+    var simNodes = [];
 
     d3.selectAll('.scatterselectedtext-' + type).each(function () {
         var t = d3.select(this.parentNode).attr('transform');
@@ -496,39 +499,41 @@ vis.repositionLabels = function (type) {
         var ax = +m[1], ay = +m[2];
         var bbox = this.getBBox();
 
-        labels.push({
-            el: this,
-            screenTop: ay + bbox.y,
-            screenH:   bbox.height,
-            screenX:   ax + bbox.x,
-            screenW:   bbox.width,
-            shiftY: 0
+        // Label centre in root SVG coordinate space
+        var cx = ax + bbox.x + bbox.width  / 2;
+        var cy = ay + bbox.y + bbox.height / 2;
+
+        simNodes.push({
+            el:      this,
+            ax:      ax,         // parent group origin x
+            ay:      ay,         // parent group origin y
+            bboxX:   bbox.x,     // natural top-left x in group coords
+            bboxY:   bbox.y,     // natural top-left y in group coords
+            w:       bbox.width,
+            h:       bbox.height,
+            x:       cx,         // force sim position (centre, SVG space)
+            y:       cy,
+            anchorX: cx,         // pull-back anchor
+            anchorY: cy,
+            r: Math.sqrt(bbox.width * bbox.width + bbox.height * bbox.height) / 2 + 3
         });
     });
 
-    if (labels.length < 2) return;
+    if (simNodes.length < 2) return;
 
-    for (var pass = 0; pass < 20; pass++) {
-        labels.sort(function (a, b) { return a.screenTop - b.screenTop; });
-        var moved = false;
-        for (var i = 0; i + 1 < labels.length; i++) {
-            var a = labels[i], b = labels[i + 1];
-            var xOverlap = a.screenX < b.screenX + b.screenW + 2 &&
-                           a.screenX + a.screenW + 2 > b.screenX;
-            var gap = b.screenTop - (a.screenTop + a.screenH);
-            if (xOverlap && gap < 2) {
-                var push = 2 - gap;
-                b.screenTop += push;
-                b.shiftY += push;
-                moved = true;
-            }
-        }
-        if (!moved) break;
-    }
+    var simulation = d3.forceSimulation(simNodes)
+        .alphaDecay(0)          // constant force — no cooling
+        .force('collide', d3.forceCollide(function (d) { return d.r; }).strength(1).iterations(8))
+        .force('x', d3.forceX(function (d) { return d.anchorX; }).strength(0.03))
+        .force('y', d3.forceY(function (d) { return d.anchorY; }).strength(0.03))
+        .stop();
 
-    labels.forEach(function (d) {
-        if (d.shiftY !== 0) {
-            d3.select(d.el).attr('transform', 'translate(0,' + d.shiftY + ')');
-        }
+    for (var i = 0; i < 200; i++) simulation.tick();
+
+    simNodes.forEach(function (d) {
+        // New top-left in group coords = (sim_centre - SVG_origin) - natural_bbox_offset
+        var tx = (d.x - d.w / 2 - d.ax) - d.bboxX;
+        var ty = (d.y - d.h / 2 - d.ay) - d.bboxY;
+        d3.select(d.el).attr('transform', 'translate(' + tx + ',' + ty + ')');
     });
 };
