@@ -54,5 +54,5 @@ jobs:
           script: |
             cd ~/xscatter
             docker compose pull app
-            docker compose up -d app
+            docker compose up -d --force-recreate app
             docker image prune -f
