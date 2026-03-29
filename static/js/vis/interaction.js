@@ -4,7 +4,7 @@ vis.selectInteraction = function (imageIds) {
     for (let i = 0; i < imageIds.length; ++i) {
         let imageID = imageIds[i];
 
-        let scatterplotTypes = ['act', 'fea', 'prd'];
+        let scatterplotTypes = ['act', 'layer1', 'layer3', 'layer5', 'fea', 'prd'];
 
         // Cluster interaction
         d3.selectAll('.inner-circle-' + imageID)
@@ -14,29 +14,27 @@ vis.selectInteraction = function (imageIds) {
 
         d3.selectAll('#image-bubble-' + imageID).moveToFront();
 
-        // Scatter plot interaction
+        // Scatter plot interaction — all panels animate simultaneously
         for (let j = 0; j < scatterplotTypes.length; ++j) {
             let type = scatterplotTypes[j];
-            // Scatterplot interaction
+
             d3.select('#scatterdot-' + type + '-' + imageID)
                 .append('circle')
                 .attr('class', 'scatterdot-selected')
-                .attr('r', 5)
+                .attr('r', 0)
                 .attr('fill', 'red')
                 .attr('fill-opacity', 0)
                 .attr('stroke', 'red')
+                .attr('stroke-opacity', 0)
+                .attr('stroke-width', '2px')
+                .moveToFront()
+                .transition()
+                .duration(200)
+                .attr('r', 9)
                 .attr('stroke-opacity', 1)
-                .attr('stroke-width', '1px').moveToFront();
-
-            /*
-            d3.select('#scatterdot-' + type + '-' + imageID)
-                .append('text')
-                .attr('class', 'scatterdot-selected')
-                .attr("dy", "-1.5em")
-                .style("text-anchor", "middle")
-                .style('fill', 'rgb(43, 20, 217)')
-                .style('font-size', '10px')
-                .text(imageID).moveToFront();*/
+                .transition()
+                .duration(150)
+                .attr('r', 5);
         }
     }
 
@@ -48,7 +46,7 @@ vis.selectInteraction = function (imageIds) {
 // single id
 vis.hoverInteraction = function (imageID) {
 
-    let scatterplotTypes = ['act', 'fea', 'prd'];
+    let scatterplotTypes = ['act', 'layer1', 'layer3', 'layer5', 'fea', 'prd'];
 
     // Cluster interaction
     d3.selectAll('.inner-circle-' + imageID)
@@ -56,19 +54,26 @@ vis.hoverInteraction = function (imageID) {
     d3.selectAll('.inner-text-' + imageID)
             .style('fill', '#fff');
 
-    // Scatter plot interaction
+    // Scatter plot interaction — animated, all panels simultaneously
     for (let i = 0; i < scatterplotTypes.length; ++i) {
         let type = scatterplotTypes[i];
-        // Scatterplot interaction
         d3.select('#scatterdot-' + type + '-' + imageID)
             .append('circle')
             .attr('class', 'scatterdot-hover')
-            .attr('r', 5)
-            .attr('fill', 'red')
-            .attr('fill-opacity', 0)
+            .attr('r', 0)
+            .attr('fill', 'none')
             .attr('stroke', 'red')
+            .attr('stroke-opacity', 0)
+            .attr('stroke-width', '2px')
+            .moveToFront()
+            .transition()
+            .duration(200)
+            .attr('r', 11)
             .attr('stroke-opacity', 1)
-            .attr('stroke-width', '3px');
+            .transition()
+            .duration(150)
+            .attr('r', 7)
+            .attr('stroke-opacity', 0.8);
     }
 
     return;

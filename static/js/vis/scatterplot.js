@@ -315,8 +315,8 @@ vis.addDotZoom = function (svg, className, container) {
     // Add event to all dots
     d3.selectAll(className)
         .attr('cursor', 'pointer')
-        .on('mouseover', vis.dotOnMouseOver)
-        .on('mouseout', vis.dotOnMouseOut)
+        .on('mouseenter', vis.dotOnMouseOver)
+        .on('mouseleave', vis.dotOnMouseOut)
         .on('click', vis.dotOnClick)
         .moveToFront();
 
@@ -335,7 +335,7 @@ vis.dotOnClick = function () {
 
     //image_ids.push(imageID);
     vis.showSelectedImages(main.selectImageIds);
-    vis.selectInteraction(main.selectImageIds);
+    vis.selectInteraction([imageID]);
 
     return;
 }
@@ -348,9 +348,7 @@ vis.dotOnMouseOver = function () {
 
     var id = d3.select(this).attr('id').split('-')[2];
 
-    d3.select('#scatterselect-act-' + id).attr('r', 15);
-    d3.select('#scatterselect-fea-' + id).attr('r', 15);
-    d3.select('#scatterselect-prd-' + id).attr('r', 15);
+    vis.hoverInteraction(id);
 
     var image = $('<img/>', {
         src: '/static/images/' + main.imagePath + id + main.imageFileType,
@@ -373,9 +371,7 @@ vis.dotOnMouseOut = function () {
     dom.containers.scatterPlotImage.css({ 'opacity': 0 });
     dom.containers.scatterPlotImageId.css({ 'opacity': 0 });
 
-    d3.select('#scatterselect-act-' + id).attr('r', 7);
-    d3.select('#scatterselect-fea-' + id).attr('r', 7);
-    d3.select('#scatterselect-prd-' + id).attr('r', 7);
+    vis.hoverOutInteraction(id);
 
     return;
 }
@@ -462,6 +458,8 @@ vis.addDotLasso = function (svg, className) {
     // Add lasso to svg
     svg.call(lasso);
 
+    (function (t) { setTimeout(function () { vis.repositionLabels(t); }, 0); })(type);
+
     return;
 }
 
@@ -484,3 +482,50 @@ vis.hideScatterplotBackground = function () {
     d3.selectAll('.scattercircle-layer3').remove();
     d3.selectAll('.scattercircle-layer5').remove();
 }
+
+vis.repositionLabels = function (type) {
+    var labels = [];
+
+    d3.selectAll('.scatterselectedtext-' + type).each(function () {
+        var t = d3.select(this.parentNode).attr('transform');
+        var m = t.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!m) return;
+        var ax = +m[1], ay = +m[2];
+        var bbox = this.getBBox();
+
+        labels.push({
+            el: this,
+            screenTop: ay + bbox.y,
+            screenH:   bbox.height,
+            screenX:   ax + bbox.x,
+            screenW:   bbox.width,
+            shiftY: 0
+        });
+    });
+
+    if (labels.length < 2) return;
+
+    for (var pass = 0; pass < 20; pass++) {
+        labels.sort(function (a, b) { return a.screenTop - b.screenTop; });
+        var moved = false;
+        for (var i = 0; i + 1 < labels.length; i++) {
+            var a = labels[i], b = labels[i + 1];
+            var xOverlap = a.screenX < b.screenX + b.screenW + 2 &&
+                           a.screenX + a.screenW + 2 > b.screenX;
+            var gap = b.screenTop - (a.screenTop + a.screenH);
+            if (xOverlap && gap < 2) {
+                var push = 2 - gap;
+                b.screenTop += push;
+                b.shiftY += push;
+                moved = true;
+            }
+        }
+        if (!moved) break;
+    }
+
+    labels.forEach(function (d) {
+        if (d.shiftY !== 0) {
+            d3.select(d.el).attr('transform', 'translate(0,' + d.shiftY + ')');
+        }
+    });
+};
