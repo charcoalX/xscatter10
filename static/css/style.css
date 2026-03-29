@@ -233,6 +233,7 @@ html, body {
     height: 100%;
     float: left;
     overflow: hidden;
+    border-left: 1px solid #f0f0f0;
 }
 
 #layer2-content,
