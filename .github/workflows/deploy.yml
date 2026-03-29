@@ -53,6 +53,7 @@ jobs:
           key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
           script: |
             cd ~/xscatter
+            gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
             docker compose pull app
             docker compose up -d --force-recreate app
             docker image prune -f
