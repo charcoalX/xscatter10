@@ -28,7 +28,7 @@ dom.buttons = {
 
     // attribute study
     attrStudy: $('#attribute-study-btn'),
-    hideBackground: $('#navbar-hide-background'),
+    backgroundSlider: $('#background-opacity-slider'),
 
     imageContainer: $('#imagecontainer-toggle-btn'),
     groupSelectToggle: $('#group-selection-toggle-btn')

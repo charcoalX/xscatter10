@@ -1,6 +1,7 @@
 vis.selectionCount = 0;
 vis.selectedDots = [];
 vis.distanceOfErrors = [];
+vis.backgroundOpacity = 1.0;
 
 // Visualize scatterplot
 vis.scatterplot = function (container, type, dots) {
@@ -60,7 +61,8 @@ vis.scatterplot = function (container, type, dots) {
                 .attr("transform", "translate(-" + (circleWidth / 2) + ",-" + (circleWidth / 2) + ")")
                 .attr('r', 5)
                 .attr('fill', vis.getDotColor(dot.id))
-                .attr('fill-opacity', (d,i) => (linearScale(vis.distanceOfErrors[dot.id])));
+                .attr('fill-opacity', (d,i) => (linearScale(vis.distanceOfErrors[dot.id])))
+                .attr('opacity', vis.backgroundOpacity);
 
             if (vis.isSelectedDots(dot.id)) {
                 group.append('circle')
@@ -474,13 +476,14 @@ vis.updateColor = function (id, color) {
     return;
 }
 
-vis.hideScatterplotBackground = function () {
-    d3.selectAll('.scattercircle-act').remove();
-    d3.selectAll('.scattercircle-fea').remove();
-    d3.selectAll('.scattercircle-prd').remove();
-    d3.selectAll('.scattercircle-layer1').remove();
-    d3.selectAll('.scattercircle-layer3').remove();
-    d3.selectAll('.scattercircle-layer5').remove();
+vis.setBackgroundOpacity = function (opacity) {
+    vis.backgroundOpacity = opacity;
+    d3.selectAll('.scattercircle-act').attr('opacity', opacity);
+    d3.selectAll('.scattercircle-fea').attr('opacity', opacity);
+    d3.selectAll('.scattercircle-prd').attr('opacity', opacity);
+    d3.selectAll('.scattercircle-layer1').attr('opacity', opacity);
+    d3.selectAll('.scattercircle-layer3').attr('opacity', opacity);
+    d3.selectAll('.scattercircle-layer5').attr('opacity', opacity);
 }
 
 vis.repositionLabels = function (type) {

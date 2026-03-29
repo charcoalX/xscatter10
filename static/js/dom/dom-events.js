@@ -356,17 +356,11 @@ dom.initAttributeVizButton = function () {
     return;
 }
 
-// Hide and show background button
-dom.initHideBackgroundButton = function () {
-    dom.buttons.hideBackground.on('click', function () {
-        dom.buttons.hideBackground.toggleClass('active');
-        if (dom.buttons.hideBackground.hasClass('active')) {
-            vis.hideScatterplotBackground();
-            dom.buttons.hideBackground.html('Show Background');
-        } else {
-            main.visualize();
-            dom.buttons.hideBackground.html('Hide Background');
-        }
+// Background opacity slider
+dom.initBackgroundOpacitySlider = function () {
+    dom.buttons.backgroundSlider.on('input', function () {
+        var opacity = parseFloat($(this).val());
+        vis.setBackgroundOpacity(opacity);
     });
 }
 

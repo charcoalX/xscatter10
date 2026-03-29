@@ -65,9 +65,26 @@
     left: 5px;
 }
 
-#navbar-hide-background {
+#background-opacity-container {
+    position: absolute;
     top: 125px;
     left: 5px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+}
+
+#background-opacity-label {
+    font-size: 11px;
+    color: #252525;
+    margin-bottom: 2px;
+}
+
+#background-opacity-slider {
+    width: 80px;
+    cursor: pointer;
+    accent-color: #525252;
 }
 
 #act-content {

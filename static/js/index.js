@@ -43,7 +43,7 @@ main.init = function () {
     // Attribute visualization
     dom.initAttributeVizButton();
     // Hide scatterplot background
-    dom.initHideBackgroundButton();
+    dom.initBackgroundOpacitySlider();
     // Initialize matrix options
     dom.initMatrixOptions();
     // Initialize count options

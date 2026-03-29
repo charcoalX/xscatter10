@@ -58,7 +58,10 @@
         <button id="default-dot-btn" class="dot-color-btn selected">Default</button>
         <button id="prediction-dot-btn" class="dot-color-btn">Prediction</button>
         <button id="flower-dot-btn" class="dot-color-btn">FlowerPlot</button>
-        <button id="navbar-hide-background" class="dot-color-btn">Hide Background</button>
+        <div id="background-opacity-container">
+            <label id="background-opacity-label">Background</label>
+            <input type="range" id="background-opacity-slider" min="0" max="1" step="0.05" value="1">
+        </div>
 
         <div id="scatterplot-image"></div>
         <div id="scatterplot-imageid"></div>
