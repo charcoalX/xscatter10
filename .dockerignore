@@ -1,0 +1,10 @@
+.git
+.gitignore
+.vscode
+__pycache__
+*.pyc
+*.pyo
+noneed_doc/
+.ipynb_checkpoints/
+*.ipynb
+function_changes.md

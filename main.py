@@ -19,12 +19,13 @@ app.debug = True
 with open('config.json') as config_file:
     conn_info = json.load(config_file)
 
-# Define database connection
-host = conn_info['host']
-dbname = conn_info['dbname']
-user = conn_info['user']
-port = conn_info['port']
-password = conn_info['password']
+# Define database connection (environment variables override config.json)
+import os as _os
+host     = _os.environ.get('DB_HOST',     conn_info['host'])
+dbname   = _os.environ.get('DB_NAME',     conn_info['dbname'])
+user     = _os.environ.get('DB_USER',     conn_info['user'])
+port     = _os.environ.get('DB_PORT',     conn_info['port'])
+password = _os.environ.get('DB_PASSWORD', conn_info['password'])
 
 # Create connection string
 conn_str =  "host='" + host + "' dbname='" + dbname + "' user='" + user + "' password='" + password + "' port='" + port + "'"
