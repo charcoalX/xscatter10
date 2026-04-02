@@ -1,4 +1,14 @@
+// Persistent store: keyed by imageId, value = { src, label, opacity }
+vis.lrpOverlays = vis.lrpOverlays || {};
+
 vis.showSelectedImages = function (image_ids) {
+
+    // Remove store entries for images no longer in selection
+    Object.keys(vis.lrpOverlays).forEach(function(id) {
+        if (image_ids.indexOf(id) === -1 && image_ids.indexOf(Number(id)) === -1) {
+            delete vis.lrpOverlays[id];
+        }
+    });
 
     dom.contents.images.empty();
 
@@ -8,6 +18,8 @@ vis.showSelectedImages = function (image_ids) {
                     .style("opacity", 0);
 
     for (let i = 0; i < image_ids.length; ++i) {
+        let img_id = image_ids[i];
+
         if(main.embedding.options['Data type'] == 'synthetic'){
             var source = '/static/images/vis_filtered_thumbnails/' + image_ids[i] + '.jpg';
         }else if (main.embedding.options['Data type'] == 'experimental'){
@@ -16,19 +28,27 @@ vis.showSelectedImages = function (image_ids) {
         }else if (main.embedding.options['Data type']  == 'cifar10'){
             var source = '/static/images/cifar10_images/' + image_ids[i] + '.png';
         }
-        
+
         let image_container = $('<div/>', {
             id: 'image-container-' + image_ids[i]
         }).css({
             'width': '9%',
-            'height': '88.5%',
+            'height': 'auto',
             'background': '#ffffff',
             'margin-right' : '10px',
             'font-size': '12px',
             'display': 'inline-block',
             'position': 'relative',
-            'padding': '10px'
+            'padding': '10px',
+            'vertical-align': 'top'
         }).html('Image ID: ' + image_ids[i] + ' <br/>');
+
+        // Pre-allocated label row — filled when LRP is computed, keeps height stable
+        let lrpLabel = $('<div/>', { class: 'lrp-label', id: 'lrp-label-' + image_ids[i] })
+            .css({ 'font-size': '9px', color: '#444', height: '14px', overflow: 'hidden',
+                   'text-overflow': 'ellipsis', 'white-space': 'nowrap', 'line-height': '14px' })
+            .text('');
+        image_container.append(lrpLabel);
 
         let closeButton = $('<button/>').css({
             position: 'absolute',
@@ -42,9 +62,35 @@ vis.showSelectedImages = function (image_ids) {
         }).html('<i class="fas fa-times"></i>');
         image_container.append(closeButton);
 
+        // Opacity slider for LRP overlay — hidden until heatmap is loaded
+        let opacitySlider = $('<input/>', {
+            type: 'range',
+            min: 0,
+            max: 1,
+            step: 0.05,
+            value: 0.7,
+            class: 'lrp-opacity-slider',
+            id: 'lrp-slider-' + image_ids[i]
+        }).css({
+            position: 'absolute',
+            top: '2px',
+            right: '18px',
+            width: '50px',
+            height: '12px',
+            'z-index': '1000',
+            display: 'none'
+        });
+        image_container.append(opacitySlider);
+
+        opacitySlider.on('input', function() {
+            var op = $(this).val();
+            $('#lrp-overlay-' + img_id).css('opacity', op);
+            if (vis.lrpOverlays[img_id]) { vis.lrpOverlays[img_id].opacity = parseFloat(op); }
+        });
+
         let img_div = $('<div/>').css({
             width: '100%',
-            height: '50%',
+            height: 'auto',
             float:'left',
             position:'relative'
         });
@@ -53,17 +99,40 @@ vis.showSelectedImages = function (image_ids) {
             src: source,
             title: 'image-' + image_ids[i],
             class: 'xray_image',
+            width: '100%'
+        }).css({ display: 'block', height: 'auto' });
+
+        // LRP heatmap overlay — hidden until computed
+        let lrpOverlay = $('<img/>', {
+            id: 'lrp-overlay-' + image_ids[i],
+            class: 'lrp-overlay'
+        }).css({
+            position: 'absolute',
+            top: 0,
+            left: 0,
             width: '100%',
-            height: '100%'
+            height: '100%',
+            opacity: 0.7,
+            display: 'none',
+            'pointer-events': 'none'
         });
 
         img_div.append(image);
+        img_div.append(lrpOverlay);
 
-        let heatmap_div = $('<div/>', { 
+        // Restore previously computed LRP overlay if it exists
+        var stored = vis.lrpOverlays[img_id] || vis.lrpOverlays[String(img_id)];
+        if (stored) {
+            lrpOverlay.attr('src', stored.src).css({ opacity: stored.opacity, display: 'block' });
+            opacitySlider.val(stored.opacity).show();
+            lrpLabel.text(stored.label);
+        }
+
+        let heatmap_div = $('<div/>', {
             id: 'heatmap-' + image_ids[i]
         }).css({
             width: '100%',
-            height: '50%',
+            height: '136px',
             color: '#fff',
             'padding': '5px',
             'text-align': 'center',
@@ -71,9 +140,20 @@ vis.showSelectedImages = function (image_ids) {
             position:'relative'
         });
 
+        image.on('load', function() {
+            var imgH = $(this).height();
+            var needed = imgH + 150 + 16 + 24;
+            var current = $('#bottom-container').height();
+            if (needed > current) {
+                $('#bottom-container').css('height', needed + 'px');
+                var remaining = window.innerHeight - needed;
+                $('#top-container').css('height', Math.max(remaining, window.innerHeight * 0.3) + 'px');
+            }
+        });
+
         image_container.append(img_div);
         image_container.append(heatmap_div);
-        dom.contents.images.prepend(image_container);
+        dom.contents.images.append(image_container);
 
         image_container.on('mouseover', () => {
             vis.hoverInteraction(image_ids[i]);
@@ -123,7 +203,7 @@ vis.showSelectedImages = function (image_ids) {
                     .append('svg')
                     .attr('width', width)
                     .attr('height', height);
-        
+
         // 3 rows for each group
         let rect_height = ((height / 2) / 3) - 10;
         let rect_width = (width / 6) - 3;
@@ -165,21 +245,27 @@ vis.showSelectedImages = function (image_ids) {
                 })
                 .attr('width', rect_width)
                 .attr('fill', (d, i) => {
-                    if (d > 0.5){
+                    if (main.embedding.options['Data type'] === 'synthetic'){
+                        if (d > 0.5) { return colors[i] }
+                        return '#f0f0f0';
+                    }else{
                         return colors[i];
                     }
-                    else {
-                        return '#f0f0f0';
+
+                })
+                .attr('opacity', (d,i) =>{
+                    if (main.embedding.options['Data type'] === 'synthetic'){
+                        return 1;
+                    }else{
+                        return d;
                     }
+
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', '0px')
                 .style('cursor', 'pointer')
-            //.transition()
-                //.duration(500)
                 .attr('transform', (d, i) => {
                     let x = (rect_width +distance) * (i % 6);
-                    // let y = (rect_height +distance)* Math.floor(i / 6)+ 15 + (1-d) * rect_height;
                     let y = (rect_height + distance) * Math.floor(i / 6)+ 15;
                     return 'translate(' + x + ',' + y + ')';
                 })
@@ -197,6 +283,10 @@ vis.showSelectedImages = function (image_ids) {
                     tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
+                })
+                .on('click', function (d, attrIdx) {
+                    d3.event.stopPropagation();
+                    vis.requestLRPHeatmap(img_id, attrIdx);
                 });
 
         let truelabel_group = svg.append('g')
@@ -210,9 +300,8 @@ vis.showSelectedImages = function (image_ids) {
             .attr('fill', (d, i) => {
                 if (d > 0.5) { return colors[i] }
                 return '#f0f0f0';
+
             })
-            //.transition()
-            //.duration(500)
             .attr('transform', (d, i) => {
                 let x = (rect_width +distance)* (i % 6);
                 let y = (rect_height +distance) * Math.floor(i / 6) + (height / 2) + 10;
@@ -259,3 +348,41 @@ vis.showSelectedImages = function (image_ids) {
 
     return;
 }
+
+vis.requestLRPHeatmap = function(imageId, classIdx) {
+    var labels    = main.embedding.labels || [];
+    var labelName = labels[classIdx] ? labels[classIdx] : ('class ' + classIdx);
+    var overlay   = $('#lrp-overlay-' + imageId);
+    if (!overlay.length) return;
+
+    var container = $('#image-container-' + imageId);
+    var labelEl   = $('#lrp-label-' + imageId);
+    labelEl.css('color', '#888').text('computing...');
+
+    // Get p-value from database predProb
+    var predProbObj = main.embedding.data[imageId] && main.embedding.data[imageId].predProb;
+    var predProbArr = [];
+    if (predProbObj) {
+        Object.keys(predProbObj).forEach(function(k) { predProbArr.push(predProbObj[k]); });
+    }
+    var dbPredProb = predProbArr.length > classIdx ? predProbArr[classIdx] : null;
+
+    query.getLRPHeatmap(imageId, classIdx, main.embedding.options['Data type'])
+        .then(function(result) {
+            if (result.status === 'ok') {
+                var pVal  = dbPredProb !== null ? dbPredProb.toFixed(2) : result.pred_prob.toFixed(2);
+                var label = 'LRP: ' + labelName + ' (p=' + pVal + ')';
+                labelEl.css('color', '#444').text(label);
+                var sliderVal = parseFloat($('#lrp-slider-' + imageId).val()) || 0.7;
+                var src = 'data:image/png;base64,' + result.heatmap_b64;
+                overlay.attr('src', src).css({ opacity: sliderVal, display: 'block' });
+                $('#lrp-slider-' + imageId).show();
+                vis.lrpOverlays[imageId] = { src: src, label: label, opacity: sliderVal };
+            } else {
+                labelEl.css('color', '#c00').text('error: ' + result.message);
+            }
+        })
+        .catch(function() {
+            labelEl.css('color', '#c00').text('LRP unavailable');
+        });
+};

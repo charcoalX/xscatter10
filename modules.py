@@ -69,3 +69,9 @@ try:
     import math
 except ImportError:
     raise util_import_error_message(['math'])
+
+# requests (for LRP sidecar proxy)
+try:
+    import requests as http_requests
+except ImportError:
+    raise util_import_error_message(['requests'])

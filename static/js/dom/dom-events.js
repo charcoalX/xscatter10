@@ -79,6 +79,7 @@ dom.initSelectToggleButton = function () {
 
         if (dom.buttons.selectToggle.hasClass('open')) {
             dom.containers.filter.width('15%');
+            $('#clear-selections-btn').show();
             if (!visOpen) {
                 dom.containers.scatterplot.width('85%');
             } else if (compareOpen) {
@@ -90,6 +91,7 @@ dom.initSelectToggleButton = function () {
             }
         } else {
             dom.containers.filter.width('0%');
+            $('#clear-selections-btn').hide();
             if (!visOpen) {
                 dom.containers.scatterplot.width('100%');
             } else if (compareOpen) {
@@ -477,3 +479,4 @@ dom.initImageContainer = function() {
         dom.contents.images.empty();
     });
 }
+

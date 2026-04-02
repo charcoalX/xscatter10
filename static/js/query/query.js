@@ -4,6 +4,8 @@ var query = query || {};
 // Query all matrix data
 query.getAll = function (embedding) {
 
+    console.log(embedding);
+
     return new Promise(function (resolve, reject) {
         $.ajax({
             type: 'POST',
@@ -24,7 +26,7 @@ query.getAll = function (embedding) {
 
 
 
-// Query clustering data
+// Query clustering data (k-mean)
 query.getCluster = function (vectors, clusterNum) {
     
     return new Promise (function (resolve, reject) {
@@ -32,6 +34,7 @@ query.getCluster = function (vectors, clusterNum) {
             vectors: vectors,
             clusterNum: clusterNum
         };
+        console.log("obj clustering vector:", obj)
 
         $.ajax({
             type: 'POST',
@@ -41,6 +44,33 @@ query.getCluster = function (vectors, clusterNum) {
             dataType: 'json',
             url: '/GetCluster',
             success: function(data) {
+                resolve(data);
+            },
+            error: function(error) {
+                reject(error);
+            }
+        });
+    });
+}
+
+query.getClusterDBSCAN = function (vectors, eps, min_sample) {
+
+    return new Promise(function(resolve, reject) {
+        var obj = {
+            vectors: vectors,
+            eps: eps,
+            min_samples: min_sample
+        };
+        console.log('obj dbscan vector: ', obj);
+
+        $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            async: true,
+            data: JSON.stringify(obj),
+            dataType: 'json',
+            url: '/GetClusterDBSCAN',
+            success: function(data) {               
                 resolve(data);
             },
             error: function(error) {
@@ -135,11 +165,27 @@ query.getTsne = function(inputs, parameters) {
 //                     main.count = count;
 //                     console.log("main for Count",main)
 //                     resolve(result);
-//                 });                            
+//                 });
 //             },
 //             error: function (error) {
 //                 reject(error);
 //             }
 //         });
 //     });
+
+query.getLRPHeatmap = function(imageId, classIdx, dataType) {
+    return new Promise(function(resolve, reject) {
+        $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            async: true,
+            data: JSON.stringify({ image_id: imageId, class_idx: classIdx, data_type: dataType }),
+            dataType: 'json',
+            url: '/GetLRPHeatmap',
+            timeout: 90000,
+            success: resolve,
+            error: reject
+        });
+    });
+};
 // }
