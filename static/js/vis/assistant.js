@@ -59,10 +59,15 @@
                     messages.pop(); // remove unanswered user message from history
                 }
             },
-            error: function () {
+            error: function (xhr) {
                 thinking.remove();
                 $('#ai-assistant-send').prop('disabled', false);
-                appendMessage('assistant', 'Could not reach the assistant. Check that ANTHROPIC_API_KEY is set.', true);
+                var msg = 'Could not reach the assistant.';
+                try {
+                    var body = JSON.parse(xhr.responseText);
+                    if (body && body.message) msg = 'Error: ' + body.message;
+                } catch (e) {}
+                appendMessage('assistant', msg, true);
                 messages.pop();
             }
         });

@@ -218,11 +218,6 @@ Answer questions about how to use this tool, what features mean, and how to inte
 
 @app.route('/AskAssistant', methods=['POST'])
 def Route_ask_assistant():
-    try:
-        import anthropic as _anthropic
-    except ImportError:
-        return jsonify({'status': 'error', 'message': 'anthropic library not installed'}), 500
-
     api_key = _os.environ.get('ANTHROPIC_API_KEY', '')
     if not api_key:
         return jsonify({'status': 'error', 'message': 'ANTHROPIC_API_KEY not set'}), 500
@@ -233,14 +228,24 @@ def Route_ask_assistant():
         return jsonify({'status': 'error', 'message': 'no messages'}), 400
 
     try:
-        client = _anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model='claude-haiku-4-5-20251001',
-            max_tokens=1024,
-            system=_ASSISTANT_SYSTEM_PROMPT,
-            messages=messages
+        resp = http_requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            },
+            json={
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 1024,
+                'system': _ASSISTANT_SYSTEM_PROMPT,
+                'messages': messages
+            },
+            timeout=30
         )
-        return jsonify({'status': 'ok', 'reply': response.content[0].text})
+        resp.raise_for_status()
+        data = resp.json()
+        return jsonify({'status': 'ok', 'reply': data['content'][0]['text']})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
