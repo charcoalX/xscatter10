@@ -47,12 +47,19 @@ jobs:
       # 6. SSH 进入 GCE VM，拉取新镜像并重启应用
       - name: Deploy to GCE
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           host: ${{ secrets.GCE_HOST }}
           username: ${{ secrets.GCE_USER }}
           key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+          envs: ANTHROPIC_API_KEY
           script: |
             cd ~/xscatter
+            # Write ANTHROPIC_API_KEY to .env (not in git, persisted on VM)
+            grep -v '^ANTHROPIC_API_KEY=' .env 2>/dev/null > .env.tmp || true
+            echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> .env.tmp
+            mv .env.tmp .env
             echo "=== $(date) ===" >> ~/deploy.log
             gcloud auth configure-docker us-central1-docker.pkg.dev --quiet >> ~/deploy.log 2>&1
             docker compose pull app >> ~/deploy.log 2>&1

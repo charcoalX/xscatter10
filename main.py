@@ -7,6 +7,18 @@ print('2. Localhost server')
 print('3. Install python libraries such as Flask, psycopg2')
 print('***********************************************************************')
 
+# Load .env file if present (local development)
+import os
+try:
+    with open(os.path.join(os.path.dirname(__file__), '.env')) as _ef:
+        for _line in _ef:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+except FileNotFoundError:
+    pass
+
 # start import modules
 from modules import *
 from query import *
@@ -177,6 +189,58 @@ def Route_get_lrp_heatmap():
         return jsonify(resp.json())
     except http_requests.exceptions.ConnectionError:
         return jsonify({'status': 'error', 'message': 'LRP service unavailable'}), 503
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+_ASSISTANT_SYSTEM_PROMPT = """You are a helpful assistant embedded in XScatter, an interactive visual analysis tool for X-ray scattering images and CIFAR-10 datasets using a ResNet-50 deep learning model.
+
+Key features of XScatter:
+1. Scatter Plot (main view): Shows T-SNE or PCA embeddings of images. Each dot = one image. Colors = class labels. Click a dot to load it into the Detailed Images panel.
+2. Selection modes: "Single" (click one dot) or "Multiple" (lasso-draw a region). Selected images appear in the Detailed Images panel at the bottom.
+3. Detailed Images panel (bottom): Each selected image card shows:
+   - The raw image thumbnail
+   - PRD (Prediction Probability) grid: colored boxes showing the model's predicted probability for each of the 17 attributes
+   - ACT (Actual Label) grid: ground-truth labels
+   - Clicking a PRD box triggers an LRP heatmap overlay on the raw image showing which pixels drove that prediction
+   - An opacity slider controls heatmap transparency
+4. LRP Heatmap: Gradient×Input relevance map rendered as a jet-colormap overlay. Warm colors = high relevance pixels.
+5. Vis Panel (right side): Gallery / Statistics / Clustering views for selected images. Drag selections into the panel to compare groups.
+6. Attributes Selection (left filter panel): Filter which images appear in the scatter plot by attribute values.
+7. Group Selection: Select and compare groups of images side by side.
+8. Layer Compare: Compare scatter plots across different ResNet layers (1, 3, or 6 layers).
+9. Model Architecture: Visualizes the ResNet-50 architecture with hover tooltips showing layer shapes.
+10. Attribute Study: Pairwise attribute analysis — mutual information, correlation, conditional entropy heatmaps.
+11. Data Types: Synthetic X-ray (17 attributes), Experimental X-ray, CIFAR-10 (10 classes). Switch via the navbar dropdown.
+12. Background slider: Controls opacity of the background image in the scatter plot.
+
+Answer questions about how to use this tool, what features mean, and how to interpret visualizations. Be concise and practical. If unsure, say so."""
+
+@app.route('/AskAssistant', methods=['POST'])
+def Route_ask_assistant():
+    try:
+        import anthropic as _anthropic
+    except ImportError:
+        return jsonify({'status': 'error', 'message': 'anthropic library not installed'}), 500
+
+    api_key = _os.environ.get('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return jsonify({'status': 'error', 'message': 'ANTHROPIC_API_KEY not set'}), 500
+
+    obj = request.json or {}
+    messages = obj.get('messages', [])
+    if not messages:
+        return jsonify({'status': 'error', 'message': 'no messages'}), 400
+
+    try:
+        client = _anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=1024,
+            system=_ASSISTANT_SYSTEM_PROMPT,
+            messages=messages
+        )
+        return jsonify({'status': 'ok', 'reply': response.content[0].text})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

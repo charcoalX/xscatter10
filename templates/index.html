@@ -35,6 +35,7 @@
     </select>
     <button id="attribute-study-btn" class="navbar-buttons">Open Attribute Study</button>
     <button id="model-arch-btn" class="navbar-buttons">Model Architecture</button>
+    <button id="ai-assistant-btn" class="navbar-buttons">AI Assistant</button>
     <!-- <button id="navbar-layerwise-compare" class="navbar-buttons">Layerwise Distribution</button> -->
 </div>
 </div>
@@ -164,6 +165,19 @@
 <!-- arch tooltip (body-level, position:fixed) -->
 <div id="arch-tooltip"></div>
 
+<!-- AI Assistant chat panel -->
+<div id="ai-assistant-panel">
+    <div id="ai-assistant-header">
+        <span>AI Assistant</span>
+        <button id="ai-assistant-close" title="Close">&#x2715;</button>
+    </div>
+    <div id="ai-assistant-messages"></div>
+    <div id="ai-assistant-input-row">
+        <input type="text" id="ai-assistant-input" placeholder="Ask about this tool..." autocomplete="off"/>
+        <button id="ai-assistant-send">Send</button>
+    </div>
+</div>
+
 <!-- bottom container -->
 <div id="bottom-container">
         <!-- <button id="imagecontainer-toggle-btn">Detailed Images</button> -->
@@ -235,6 +249,7 @@
 <script src="../static/js/vis/matrix.js"></script>
 <script src="../static/js/vis/count.js"></script>
 <script src="../static/js/vis/arch.js"></script>
+<script src="../static/js/vis/assistant.js"></script>
 <!--<script src="../static/js/vis/tsne.js"></script>-->
 
 

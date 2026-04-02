@@ -10,3 +10,5 @@ noneed_doc/
 github-actions-key.json
 # LRP model checkpoint (large binary files)
 lrp_service/model/
+# Local secrets (never commit)
+.env
