@@ -60,6 +60,12 @@ jobs:
             grep -v '^ANTHROPIC_API_KEY=' .env 2>/dev/null > .env.tmp || true
             echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> .env.tmp
             mv .env.tmp .env
+            # Download model files from GCS if not already present
+            mkdir -p lrp_service/model
+            if [ ! -f lrp_service/model/model.ckpt-200.index ]; then
+              echo "Downloading LRP model from GCS..."
+              gcloud storage cp gs://xscatter-model-storage/lrp-model/* lrp_service/model/
+            fi
             echo "=== $(date) ===" >> ~/deploy.log
             gcloud auth configure-docker us-central1-docker.pkg.dev --quiet >> ~/deploy.log 2>&1
             docker compose pull app >> ~/deploy.log 2>&1
