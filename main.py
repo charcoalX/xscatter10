@@ -119,9 +119,13 @@ def _start_lrp_service():
     container_name = 'xscatter-lrp-service'
 
     # Check if already running
-    check = subprocess.Popen(
-        ['docker', 'ps', '--filter', 'name=' + container_name, '--format', '{{.Names}}'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        check = subprocess.Popen(
+            ['docker', 'ps', '--filter', 'name=' + container_name, '--format', '{{.Names}}'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        print('[LRP] docker not found, skipping auto-start (running inside container?)')
+        return
     out, _ = check.communicate()
     if container_name in out.decode():
         print('[LRP] Service already running')
