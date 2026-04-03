@@ -18,10 +18,11 @@ def query_all(params, conn, cursor):
     print("data_type:",data_type)
     print("table_name:",table_name)
     # Execute query
+    conn.rollback()  # clear any prior failed transaction
     if data_type == 'cifar10':
         cursor.execute('SELECT * from ' + table_name + '_1000 limit 300')
     else:
-        cursor.execute('SELECT * from ' + table_name +  '_'+ str(dataSize)+'   limit 300') 
+        cursor.execute('SELECT * from ' + table_name +  '_'+ str(dataSize)+'   limit 300')
         #cursor.execute('SELECT * from ' + table_name + '_1000_goodiui  limit 300')   # _6861 and limit 500  is for vis case3   # In xscatter8 _1000 limit 500
         #cursor.execute('SELECT * from ' + table_name + '_1000 limit 300')   # _6861 and limit 500  is for vis case3   # In xscatter8 _1000 limit 500
 
