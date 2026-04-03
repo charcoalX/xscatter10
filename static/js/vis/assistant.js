@@ -1,7 +1,7 @@
 (function () {
     var messages = []; // conversation history sent to API
 
-    var WELCOME = 'Hi! I\'m your AI Assistant. Ask me anything about how to use this tool — selecting images, reading the scatter plot, understanding LRP heatmaps, or anything else.';
+    var WELCOME = 'Welcome to this visual analysis tool! I\'m your AI Assistant. Ask me anything about how to use it — selecting images, reading the scatter plot, understanding LRP heatmaps, or anything else. Note: currently only Synthetic X-ray data and T-SNE embedding are available; CIFAR-10, Experimental X-ray, and PCA are not available.';
 
     function init() {
         var btn   = $('#ai-assistant-btn');
