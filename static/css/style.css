@@ -480,8 +480,7 @@ html, body {
     height: 0;
     overflow: hidden;
     background: #1e1e2e;
-    border-left: 1px solid #444;
-    border-bottom: 1px solid #444;
+    border: none;
     display: flex;
     flex-direction: column;
     z-index: 5000;
@@ -492,6 +491,8 @@ html, body {
 
 #ai-assistant-panel.open {
     height: 420px;
+    border-left: 1px solid #444;
+    border-bottom: 1px solid #444;
 }
 
 #ai-assistant-header {
