@@ -30,19 +30,25 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      # 4. 构建 Docker 镜像，用 git commit SHA 作为版本标签
-      - name: Build Docker image
+      # 4. 构建 Docker 镜像
+      - name: Build Docker images
         run: |
           docker build --no-cache \
             -t ${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }} \
             -t ${{ env.REPO }}/${{ env.IMAGE }}:latest \
             .
+          docker build --no-cache \
+            -t ${{ env.REPO }}/lrp-service:${{ github.sha }} \
+            -t ${{ env.REPO }}/lrp-service:latest \
+            ./lrp_service
 
       # 5. 推送镜像到 Artifact Registry
-      - name: Push Docker image
+      - name: Push Docker images
         run: |
           docker push ${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.REPO }}/${{ env.IMAGE }}:latest
+          docker push ${{ env.REPO }}/lrp-service:${{ github.sha }}
+          docker push ${{ env.REPO }}/lrp-service:latest
 
       # 6. SSH 进入 GCE VM，拉取新镜像并重启应用
       - name: Deploy to GCE
@@ -68,6 +74,17 @@ jobs:
             fi
             echo "=== $(date) ===" >> ~/deploy.log
             gcloud auth configure-docker us-central1-docker.pkg.dev --quiet >> ~/deploy.log 2>&1
+            # Pull and restart main app
             docker compose pull app >> ~/deploy.log 2>&1
             docker compose up -d --force-recreate app >> ~/deploy.log 2>&1
+            # Pull and restart lrp-service
+            docker pull us-central1-docker.pkg.dev/xray-imagemodel-visualization/xscatter-repo/lrp-service:latest >> ~/deploy.log 2>&1
+            docker stop xscatter-lrp-service 2>/dev/null || true
+            docker rm xscatter-lrp-service 2>/dev/null || true
+            docker run -d \
+              --name xscatter-lrp-service \
+              -p 5001:5001 \
+              -v ~/xscatter/lrp_service/model:/model:ro \
+              -e CKPT_PATH=/model/model.ckpt-200 \
+              us-central1-docker.pkg.dev/xray-imagemodel-visualization/xscatter-repo/lrp-service:latest >> ~/deploy.log 2>&1
             docker image prune -f >> ~/deploy.log 2>&1
