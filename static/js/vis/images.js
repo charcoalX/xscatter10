@@ -17,6 +17,132 @@ vis.showSelectedImages = function (image_ids) {
                     .attr("class", "heatmap-tooltip")
                     .style("opacity", 0);
 
+    // Helper: render PRD + ACT SVG into heatmapDiv at a given pixel height
+    function renderHeatmap(heatmapDiv, heatmapH, pred_prob, true_label, labels, colors, img_id) {
+        heatmapDiv.empty();
+        let width  = heatmapDiv.width();
+        let height = heatmapH;
+
+        let svg = d3.select('#heatmap-' + img_id)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+        // 3 rows for each group
+        let rect_height = ((height / 2) / 3) - 10;
+        let rect_width  = (width / 6) - 3;
+        let distance    = 3;
+
+        // PRD background rects
+        svg.append('g')
+            .selectAll('rect')
+            .data(pred_prob)
+            .enter()
+            .append('rect')
+                .attr('class', 'heatmap-rect')
+                .attr('id', (d, i) => img_id + '_pred_' + i)
+                .attr('height', rect_height)
+                .attr('width', rect_width)
+                .attr('fill', '#f0f0f0')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', '0px')
+                .attr('transform', (d, i) => {
+                    let x = (rect_width + distance) * (i % 6);
+                    let y = (rect_height + distance) * Math.floor(i / 6) + 15;
+                    return 'translate(' + x + ',' + y + ')';
+                });
+
+        // PRD filled rects
+        svg.append('g')
+            .selectAll('rect')
+            .data(pred_prob)
+            .enter()
+            .append('rect')
+                .attr('class', 'heatmap-rect')
+                .attr('id', (d, i) => img_id + '_pred_' + i)
+                .attr('height', rect_height)
+                .attr('width', rect_width)
+                .attr('fill', (d, i) => {
+                    if (main.embedding.options['Data type'] === 'synthetic') {
+                        return d > 0.5 ? colors[i] : '#f0f0f0';
+                    }
+                    return colors[i];
+                })
+                .attr('opacity', (d) => {
+                    return main.embedding.options['Data type'] === 'synthetic' ? 1 : d;
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', '0px')
+                .style('cursor', 'pointer')
+                .attr('transform', (d, i) => {
+                    let x = (rect_width + distance) * (i % 6);
+                    let y = (rect_height + distance) * Math.floor(i / 6) + 15;
+                    return 'translate(' + x + ',' + y + ')';
+                })
+                .on('mouseover', function(d, i) {
+                    d3.event.stopPropagation();
+                    tooltip.transition().duration(200).style('opacity', .9);
+                    tooltip.html('<strong>' + labels[i] + '</strong><br/>' + d)
+                        .style('left', (d3.event.pageX + 15) + 'px')
+                        .style('top',  (d3.event.pageY - 15) + 'px');
+                })
+                .on('mouseout', function() {
+                    d3.event.stopPropagation();
+                    tooltip.transition().duration(500).style('opacity', 0);
+                })
+                .on('click', function(d, attrIdx) {
+                    d3.event.stopPropagation();
+                    vis.requestLRPHeatmap(img_id, attrIdx);
+                });
+
+        // ACT (true label) rects
+        svg.append('g')
+            .selectAll('rect')
+            .data(true_label)
+            .enter()
+            .append('rect')
+                .attr('class', 'heatmap-rect')
+                .attr('height', rect_height)
+                .attr('width', rect_width)
+                .attr('fill', (d, i) => d > 0.5 ? colors[i] : '#f0f0f0')
+                .attr('transform', (d, i) => {
+                    let x = (rect_width + distance) * (i % 6);
+                    let y = (rect_height + distance) * Math.floor(i / 6) + (height / 2) + 10;
+                    return 'translate(' + x + ',' + y + ')';
+                })
+                .style('cursor', 'pointer')
+                .on('mouseover', function(d, i) {
+                    d3.event.stopPropagation();
+                    tooltip.transition().duration(200).style('opacity', .9);
+                    tooltip.html('<strong>' + labels[i] + '</strong><br/>' + d)
+                        .style('left', (d3.event.pageX + 15) + 'px')
+                        .style('top',  (d3.event.pageY - 15) + 'px');
+                })
+                .on('mouseout', function() {
+                    d3.event.stopPropagation();
+                    tooltip.transition().duration(500).style('opacity', 0);
+                });
+
+        // Titles
+        svg.append('text')
+            .attr('class', 'image_Vector_title')
+            .attr('x', 0).attr('y', 0).attr('dy', '1em')
+            .attr('fill', 'black').attr('text-anchor', 'right')
+            .style('font-size', '12px')
+            .text('PRD');
+
+        svg.append('text')
+            .attr('class', 'image_Vector_title')
+            .attr('x', 0)
+            .attr('y', 25 + rect_height * 3)
+            .attr('dy', '1em')
+            .attr('fill', 'black').attr('text-anchor', 'right')
+            .style('font-size', '12px')
+            .text('ACT');
+    }
+
+    var imgMaxH = Math.floor($('#image-container').height() * 0.5);
+
     for (let i = 0; i < image_ids.length; ++i) {
         let img_id = image_ids[i];
 
@@ -32,7 +158,7 @@ vis.showSelectedImages = function (image_ids) {
         let image_container = $('<div/>', {
             id: 'image-container-' + image_ids[i]
         }).css({
-            'width': '9%',
+            'width': 'auto',
             'height': 'auto',
             'background': '#ffffff',
             'margin-right' : '10px',
@@ -90,7 +216,9 @@ vis.showSelectedImages = function (image_ids) {
 
         let img_div = $('<div/>').css({
             width: '100%',
+            'max-height': imgMaxH + 'px',
             height: 'auto',
+            overflow: 'hidden',
             float:'left',
             position:'relative'
         });
@@ -100,7 +228,7 @@ vis.showSelectedImages = function (image_ids) {
             title: 'image-' + image_ids[i],
             class: 'xray_image',
             width: '100%'
-        }).css({ display: 'block', height: 'auto' });
+        }).css({ display: 'block', height: 'auto', 'max-height': 'inherit', 'object-fit': 'contain' });
 
         // LRP heatmap overlay — hidden until computed
         let lrpOverlay = $('<img/>', {
@@ -112,6 +240,8 @@ vis.showSelectedImages = function (image_ids) {
             left: 0,
             width: '100%',
             height: '100%',
+            'max-height': imgMaxH + 'px',
+            'object-fit': 'contain',
             opacity: 0.7,
             display: 'none',
             'pointer-events': 'none'
@@ -132,7 +262,6 @@ vis.showSelectedImages = function (image_ids) {
             id: 'heatmap-' + image_ids[i]
         }).css({
             width: '100%',
-            height: '136px',
             color: '#fff',
             'padding': '5px',
             'text-align': 'center',
@@ -140,15 +269,29 @@ vis.showSelectedImages = function (image_ids) {
             position:'relative'
         });
 
+        // Extract per-image data for use in the load callback
+        let predProbObj  = main.embedding.data[image_ids[i]].predProb;
+        let trueLabelObj = main.embedding.data[image_ids[i]].trueLabel;
+        let pred_prob = [], true_label = [];
+        Object.keys(predProbObj).forEach(function(item)  { pred_prob.push(predProbObj[item]); });
+        Object.keys(trueLabelObj).forEach(function(item) { true_label.push(trueLabelObj[item]); });
+
+        let labels = main.embedding.labels;
+        let colors = main.embedding.labelColors;
+
+        // On image load: size container to image aspect ratio, then render heatmap in remaining space
         image.on('load', function() {
-            var imgH = $(this).height();
-            var needed = imgH + 150 + 16 + 24;
-            var current = $('#bottom-container').height();
-            if (needed > current) {
-                $('#bottom-container').css('height', needed + 'px');
-                var remaining = window.innerHeight - needed;
-                $('#top-container').css('height', Math.max(remaining, window.innerHeight * 0.3) + 'px');
-            }
+            var imgH       = $(this).height();
+            var ratio      = this.naturalWidth / this.naturalHeight;
+            var imgW       = Math.round(imgH * ratio);
+            image_container.css('width', (imgW + 4) + 'px');
+
+            var containerH = $('#image-container').height();
+            // overhead: Image ID line (~16px) + lrpLabel (14px) + container padding (20px top+bottom)
+            var overhead   = 50;
+            var heatmapH   = Math.max(containerH - imgH - overhead, 50);
+            heatmap_div.css('height', heatmapH + 'px');
+            renderHeatmap(heatmap_div, heatmapH, pred_prob, true_label, labels, colors, img_id);
         });
 
         image_container.append(img_div);
@@ -180,170 +323,6 @@ vis.showSelectedImages = function (image_ids) {
                 d3.selectAll('.scatterdot-hover').remove();
             }
         });
-
-        let predProbObj = main.embedding.data[image_ids[i]].predProb;
-        let trueLabelObj = main.embedding.data[image_ids[i]].trueLabel;
-
-        // Create array of predProb and truelabel
-        let pred_prob = [], true_label = [];
-        Object.keys(predProbObj).forEach(function (item) {
-            pred_prob.push(predProbObj[item]);
-        });
-        Object.keys(trueLabelObj).forEach(function (item) {
-            true_label.push(trueLabelObj[item]);
-        });
-
-        var labels = main.embedding.labels;
-        var colors = main.embedding.labelColors;
-
-        let width = heatmap_div.width();
-        let height = heatmap_div.height();
-
-        let svg = d3.select('#heatmap-' + image_ids[i])
-                    .append('svg')
-                    .attr('width', width)
-                    .attr('height', height);
-
-        // 3 rows for each group
-        let rect_height = ((height / 2) / 3) - 10;
-        let rect_width = (width / 6) - 3;
-        let distance = 3;
-
-        // divide into 2 groups
-        let predict_groupBackground = svg.append('g')
-            .selectAll('rect')
-            .data(pred_prob)
-            .enter()
-        .append('rect')
-            .attr('class','heatmap-rect') //xy
-            .attr('id',(d,i) => { return image_ids[i] +'_pred_'+ i.toString() })
-            .attr('height', (d,i) =>{
-                return rect_height;
-            })
-            .attr('width', rect_width)
-            .attr('fill', (d, i) => {
-                return '#f0f0f0';
-            })
-            .attr('stroke', '#fff')
-            .attr('stroke-width', '0px')
-            .attr('transform', (d, i) => {
-                let x = (rect_width + distance)* (i % 6);
-                let y = (rect_height + distance) * Math.floor(i / 6)+ 15;
-                return 'translate(' + x + ',' + y + ')';
-            });
-
-            let predict_groupFill = svg.append('g')
-                .selectAll('rect')
-                .data(pred_prob)
-                .enter()
-            .append('rect')
-                .attr('class','heatmap-rect')
-                .attr('id',(d,i) => { return image_ids[i] +'_pred_'+i.toString() })
-                .attr('height', (d,i) =>{
-                    // return rect_height * d;
-                    return rect_height * 1;
-                })
-                .attr('width', rect_width)
-                .attr('fill', (d, i) => {
-                    if (main.embedding.options['Data type'] === 'synthetic'){
-                        if (d > 0.5) { return colors[i] }
-                        return '#f0f0f0';
-                    }else{
-                        return colors[i];
-                    }
-
-                })
-                .attr('opacity', (d,i) =>{
-                    if (main.embedding.options['Data type'] === 'synthetic'){
-                        return 1;
-                    }else{
-                        return d;
-                    }
-
-                })
-                .attr('stroke', '#fff')
-                .attr('stroke-width', '0px')
-                .style('cursor', 'pointer')
-                .attr('transform', (d, i) => {
-                    let x = (rect_width +distance) * (i % 6);
-                    let y = (rect_height + distance) * Math.floor(i / 6)+ 15;
-                    return 'translate(' + x + ',' + y + ')';
-                })
-                .on('mouseover', function (d, i) {
-                    d3.event.stopPropagation();
-                    tooltip.transition()
-                        .duration(200)
-                        .style('opacity', .9);
-                    tooltip.html('<strong>' + labels[i] + '</strong><br/>' + d)
-                        .style('left', (d3.event.pageX) + 15 + 'px')
-                        .style('top', (d3.event.pageY) - 15 + 'px');
-                })
-                .on('mouseout', function (d) {
-                    d3.event.stopPropagation();
-                    tooltip.transition()
-                        .duration(500)
-                        .style('opacity', 0);
-                })
-                .on('click', function (d, attrIdx) {
-                    d3.event.stopPropagation();
-                    vis.requestLRPHeatmap(img_id, attrIdx);
-                });
-
-        let truelabel_group = svg.append('g')
-            .selectAll('rect')
-            .data(true_label)
-            .enter()
-        .append('rect')
-            .attr('class','heatmap-rect')//xy
-            .attr('height', rect_height)
-            .attr('width', rect_width)
-            .attr('fill', (d, i) => {
-                if (d > 0.5) { return colors[i] }
-                return '#f0f0f0';
-
-            })
-            .attr('transform', (d, i) => {
-                let x = (rect_width +distance)* (i % 6);
-                let y = (rect_height +distance) * Math.floor(i / 6) + (height / 2) + 10;
-                return 'translate(' + x + ',' + y + ')';
-            })
-            .style('cursor', 'pointer')
-            .on('mouseover', function (d, i) {
-                d3.event.stopPropagation();
-                tooltip.transition()
-                    .duration(200)
-                    .style('opacity', .9);
-                tooltip.html('<strong>' + labels[i] + '</strong><br/>' + d)
-                    .style('left', (d3.event.pageX) + 15 + 'px')
-                    .style('top', (d3.event.pageY) - 15 + 'px');
-            })
-            .on('mouseout', function (d) {
-                d3.event.stopPropagation();
-                tooltip.transition()
-                    .duration(500)
-                    .style('opacity', 0);
-            });
-
-        //xy add titile for PRD and ACT
-        svg.append('text')
-            .attr('class', 'image_Vector_title')
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr('dy', '1em')
-            .attr('fill', 'black')
-            .attr('text-anchor', 'right')
-            .style("font-size", "12px")
-            .text('PRD');
-
-        svg.append('text')
-            .attr('class', 'image_Vector_title')
-            .attr("x", 0)
-            .attr("y", 25 + rect_height *3 )
-            .attr('dy', '1em')
-            .attr('fill', 'black')
-            .attr('text-anchor', 'right')
-            .style("font-size", "12px")
-            .text('ACT');
     }
 
     return;
