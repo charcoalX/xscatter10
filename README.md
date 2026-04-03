@@ -34,18 +34,6 @@ An optional **Attribute Study** overlay slides in from the right edge when opene
 
 ---
 
-## Navbar Controls
-
-| Control | Description |
-|---|---|
-| **Feature Names** dropdown | Selects the attribute label file (`17tags_meta.txt` for X-ray, `cifar10.txt` for CIFAR-10). Files are pre-loaded server-side; switching reloads all data. |
-| **Data types** dropdown | `Synthetic`, `Experimental`, or `Cifar10`. Changes which database table is queried and which image thumbnails are used. |
-| **Error methods** dropdown | Distance metric used to compute per-dot opacity: `Cosine`, `Euclidean`, or `Manhattan`. Higher distance = more transparent dot. |
-| **Embedding methods** dropdown | `T-SNE` or `PCA` projection used to compute scatter positions. |
-| **Open Attribute Study** button | Slides open the pairwise attribute information panel on the right. Toggles to "Close Attribute Study". |
-
----
-
 ## Scatterplot Panel (top-left)
 
 The main interactive canvas. Every data point is one circle.
@@ -157,6 +145,18 @@ A horizontal scrollable strip of large-format images for data points that were c
 - Each image shows the filename / ID.
 - The corresponding dot in every scatterplot panel gets a filled inner highlight circle; clicking a highlighted dot elsewhere in the UI clears the highlight for that dot.
 
+### LRP Heatmap Overlay
+
+Clicking any **PRD** (Prediction Probability) attribute box on an image card triggers an LRP (Layer-wise Relevance Propagation) heatmap for that image and attribute.
+
+- The heatmap is computed by a Python 2.7 + TensorFlow 1.4 Docker sidecar (`lrp-service`) using Gradient×Input as the relevance method.
+- The result is overlaid directly on the raw image using a jet colormap (warm = high relevance pixels).
+- An **opacity slider** below each image controls heatmap transparency.
+- Heatmaps persist across new image additions — adding a new image does not clear existing overlays.
+- A label below each image shows which attribute was analyzed and the predicted probability.
+
+> **Note:** LRP is only available for Synthetic X-ray data (17 attributes). CIFAR-10 and Experimental X-ray are not currently supported.
+
 ---
 
 ## Attribute Study Overlay
@@ -192,6 +192,32 @@ A count-based chart showing how frequently attribute combinations co-occur in th
 | CIFAR-10 (10 classes) | `resources/data/cifar10.txt` | `static/images/cifar10_images/*.png` |
 
 Switching datasets via the Feature Names dropdown or Data types dropdown automatically reloads all data and switches the image directory.
+
+---
+
+## AI Assistant
+
+An **AI Assistant** button in the navbar opens a floating chat panel. Users can ask questions about how to use any feature of the tool — scatter plot navigation, LRP heatmaps, clustering, attribute study, etc.
+
+- Powered by Claude (claude-haiku-4-5) via the Anthropic API.
+- Conversation history is maintained within the session.
+- Requires `ANTHROPIC_API_KEY` set as an environment variable (see deployment notes).
+
+> **Currently available:** Synthetic X-ray data + T-SNE embedding only. CIFAR-10, Experimental X-ray, and PCA are not available.
+
+---
+
+## Navbar Controls
+
+| Control | Description |
+|---|---|
+| **Feature Names** dropdown | Selects the attribute label file. `cifar10.txt` is disabled (not available). |
+| **Data types** dropdown | `Synthetic` only. `Experimental` and `Cifar10` are disabled (not available). |
+| **Error methods** dropdown | Distance metric for dot opacity: `Cosine`, `Euclidean`, or `Manhattan`. |
+| **Embedding methods** dropdown | `T-SNE` only. `PCA` is disabled (not available). |
+| **Open Attribute Study** | Opens the pairwise attribute information panel. |
+| **Model Architecture** | Shows the ResNet-50 architecture diagram. |
+| **AI Assistant** | Opens the Claude-powered chat assistant. |
 
 ---
 
