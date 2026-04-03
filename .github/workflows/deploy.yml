@@ -78,6 +78,9 @@ jobs:
             docker compose pull app >> ~/deploy.log 2>&1
             docker compose up -d --force-recreate app >> ~/deploy.log 2>&1
             # Pull and restart lrp-service
+            # Extract static images from main app container to host (for lrp-service mount)
+            mkdir -p ~/xscatter/static
+            docker cp xscatter-app:/app/static/images ~/xscatter/static/ >> ~/deploy.log 2>&1 || true
             docker pull us-central1-docker.pkg.dev/xray-imagemodel-visualization/xscatter-repo/lrp-service:latest >> ~/deploy.log 2>&1
             docker stop xscatter-lrp-service 2>/dev/null || true
             docker rm xscatter-lrp-service 2>/dev/null || true
@@ -85,6 +88,7 @@ jobs:
               --name xscatter-lrp-service \
               -p 5001:5001 \
               -v ~/xscatter/lrp_service/model:/model:ro \
+              -v ~/xscatter/static/images:/images:ro \
               -e CKPT_PATH=/model/model.ckpt-200 \
               us-central1-docker.pkg.dev/xray-imagemodel-visualization/xscatter-repo/lrp-service:latest >> ~/deploy.log 2>&1
             docker image prune -f >> ~/deploy.log 2>&1
