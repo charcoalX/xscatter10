@@ -86,7 +86,7 @@ jobs:
             docker rm xscatter-lrp-service 2>/dev/null || true
             docker run -d \
               --name xscatter-lrp-service \
-              -p 5001:5001 \
+              --network xscatter_default \
               -v ~/xscatter/lrp_service/model:/model:ro \
               -v ~/xscatter/static/images:/images:ro \
               -e CKPT_PATH=/model/model.ckpt-200 \
