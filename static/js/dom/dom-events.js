@@ -54,8 +54,14 @@ dom.loadFeatureFile = function (embedding, filename) {
 // Initialize file select: populate options and bind change event
 dom.initFileInput = function (embedding) {
     Object.keys(featureFiles).forEach(function (filename) {
+        var isCifar = filename === 'cifar10.txt';
         dom.options.featureFile.append(
-            $('<option/>', { value: filename, text: filename })
+            $('<option/>', {
+                value: filename,
+                text: filename,
+                disabled: isCifar || undefined,
+                title: isCifar ? 'Not available' : undefined
+            })
         );
     });
 
