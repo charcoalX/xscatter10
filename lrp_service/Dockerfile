@@ -8,5 +8,6 @@ COPY data/ /data/
 COPY resnet_src/ resnet_src/
 COPY lrp_engine.py app.py ./
 
+ENV PYTHONUNBUFFERED=1
 EXPOSE 5001
-CMD ["python", "app.py"]
+CMD ["python", "-u", "app.py"]
