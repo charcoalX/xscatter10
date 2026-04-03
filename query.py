@@ -169,6 +169,7 @@ def query_get_mutual_info(params, conn, cursor):
     query_str_predprob = query_str_predprob[:-1]
 
     # True label
+    conn.rollback()  # clear any prior failed transaction
     cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name +  "_"+ str(dataSize)+"   limit 1000")  # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
 
     # cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_1000 limit 1000")  # _5000 and limit 5000  is for vis case3  # In xscatter8 _1000 limit 1000
@@ -362,6 +363,7 @@ def query_get_count_info(params, conn, cursor):
     query_str_predprob = query_str_predprob[:-1]
 
     # True label
+    conn.rollback()  # clear any prior failed transaction
     cursor.execute("SELECT " + query_str_truelabel + " FROM " + table_name + "_"+ str(dataSize)+" limit 300")
     truelabel_vector = cursor.fetchall()
     truelabel_vector = numpy.array(truelabel_vector)
