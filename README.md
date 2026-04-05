@@ -1,7 +1,9 @@
-# xscatter — Visual Analysis of X-Ray Scattering Images
+# Visual Analysis of X-Ray Scattering Images (Updated version)
 
 An interactive browser-based visualization platform for exploring how a ResNet-50 model processes X-ray scattering images (and CIFAR-10). The system projects high-dimensional layer activations into 2-D scatter plots, lets you select subsets of data points, and investigates attribute co-occurrence and clustering quality through several linked views.
 
+Origional publication: https://ieeexplore.ieee.org/document/9240062
+Origional code Contributors Xinyi Huang, Suphanut Jamonnak,  (ResNet-50 Model trained by Boyu Wang)
 ---
 
 ## Requirements & Setup
